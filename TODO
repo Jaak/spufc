@@ -1,1 +1,3 @@
-* Peaks projektiga alustama...
+* Write lexer with alex: http://www.haskell.org/alex/
+* Write parser with happy: http://www.haskell.org/happy/
+* Think about the poor AST
