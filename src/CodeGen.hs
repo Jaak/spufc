@@ -72,7 +72,7 @@ codev (Abs xs e) = do
     env' = Env.fromList $
              zip xs [Local (-i) | i <- [0..]] ++
              zip zs [Global i   | i <- [0..]]
-  zipWithM (\sd' -> withSd k . getvar) [sd ..] zs
+  zipWithM (\sd' -> withSd sd' . getvar) [sd ..] zs
   emits [
     MKVEC d,
     MKFUNVAL a,
