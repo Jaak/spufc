@@ -5,7 +5,7 @@ module CodeGen (
   ) where
 
 import MaMa
-import Env
+import Env as Env
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -13,7 +13,7 @@ import Control.Monad.State
 -- cg = code gen
 
 data CgState = CgState {
-    targetCode :: [MaMa] -> [MaMa],
+    targetCode :: [MaMa] -> [MaMa], -- DList
     labelSupply :: [Label]
 }
 
@@ -24,16 +24,28 @@ data CgInfoDown = CgInfoDown {
 
 type Cg = ReaderT CgInfoDown (State CgState)
 
+-- emit a mama instruction
 emit :: MaMa -> Cg ()
 emit i = modify $ \st -> st {
     targetCode = targetCode st . (i:)
   }
 
+-- generate a new unique label
 newLabel :: Cg Label
 newLabel = do
   (l : ls) <- gets labelSupply
   modify $ \st -> st { labelSupply = ls }
   return l
 
-runCg :: CgInfoDown -> CgState -> Cg a -> [MaMa]
-runCg i st cg = targetCode (execState (runReaderT cg i) st) []
+runCg :: Cg a -> [MaMa]
+runCg cg = targetCode (execState (runReaderT cg i) st) []
+  where
+    i = CgInfoDown {
+          env = Env.empty,
+          sd  = 0
+        }
+
+    st = CgState {
+          targetCode = id,
+          labelSupply = allLabels
+        }          

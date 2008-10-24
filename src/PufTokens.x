@@ -25,6 +25,8 @@ tokens :-
   letrec                  { const Letrec }
   =                       { const Eq }
   \;                      { const Semicolon }
+  \(                      { const LeftParen }
+  \)                      { const RightParen }
   
   -- builtin operators
   ==                      { const $ Bi BEq }
@@ -54,6 +56,8 @@ data Token = Lit Integer
            | Letrec
            | In
            | Eq
+           | LeftParen
+           | RightParen
            | Comma
            | Semicolon
            | Error String
