@@ -15,6 +15,13 @@ data Builtin
   | BMul
   | BDiv
   | BMod
+  | BEq
+  | BNe
+  | BLe
+  | BLt
+  | BGe
+  | BGt
+  deriving (Eq,Show)
 
 -- f x1 .. xn = e
 type Binding = (Name, [Name], AST)
