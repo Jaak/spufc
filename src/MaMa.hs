@@ -30,6 +30,7 @@ data MaMa
   | MKVEC Int
   | LABEL Label
   | MKCLOS Label
+  | MKFUNVAL Label
   | MARK Label
   | JUMPZ Label
   | JUMP Label
@@ -65,6 +66,7 @@ showsMama (REWRITE k)  = showString "rewrite"  . space . shows k
 showsMama (MKVEC k)    = showString "mkvec"    . space . shows k
 showsMama (LABEL l)    = shows l               . showChar ':'
 showsMama (MKCLOS l)   = showString "mkclos"   . space . shows l
+showsMama (MKFUNVAL l) = showString "mkfunval" . space . shows l
 showsMama (MARK l)     = showString "mark"     . space . shows l
 showsMama (JUMPZ l)    = showString "jumpz"    . space . shows l
 showsMama (JUMP l)     = showString "jump"     . space . shows l
