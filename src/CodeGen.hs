@@ -3,6 +3,7 @@ module CodeGen (codeGen) where
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Reader
+import qualified Data.Set as S
 
 import CgMonad
 import AST
@@ -68,7 +69,7 @@ codev (Abs xs e) = do
   let
     k = length xs
     d = length zs
-    zs = undefined
+    zs = fvs (Abs xs e)
     env' = Env.fromList $
              zip xs [Local (-i) | i <- [0..]] ++
              zip zs [Global i   | i <- [0..]]
@@ -92,3 +93,22 @@ getvar x = do
       sd <- asks sd
       emit (PUSHLOC (sd - i))
     Global i -> emit (PUSHGLOB i)
+
+-- TODO: find a better place for this
+
+fvs :: AST -> [Name]
+fvs = S.toList . fvs'
+
+fvs' (Var x) = S.singleton x
+fvs' (Lit _) = S.empty
+fvs' (Ifte e t f) = S.unions (map fvs' [e, t, f])
+fvs' (Abs xs e) = foldr S.delete (fvs' e) xs
+fvs' (App e es) = S.unions (map fvs' (e : es))
+fvs' (Let False bs e) = loop bs
+  where
+    loop [] = fvs' e
+    loop ((x, ys, e') : bs) = foldr S.delete (fvs' e') ys `S.union` S.delete x (loop bs)
+fvs' (Let True bs e) = foldr S.delete (S.unions (fvs' e : ss)) xs'
+  where
+    (xs', ss) = unzip [(x, foldr S.delete (fvs' e') xs) | (x, xs, e') <- bs]
+fvs' (Builtin _ es) = S.unions (map fvs' es)
