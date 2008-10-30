@@ -90,8 +90,21 @@ codev (App e es) = do
   zipWithM_ (\sd' -> withSd sd' . codec) [sd + 3 ..] (reverse es)
   withSd (sd + m + 3) (codev e)
   emits [APPLY, LABEL a]
+codev (Let False bs e) = do
+  sd <- asks sd
+  env <- asks env
+  let
+    step env ((y, e'), i) = do
+      withSd (sd + i) $ withEnv env $ codec e'
+      return $ Env.insert y (Local (sd + i + 1)) env
+  env' <- foldM step env (zip xs [0..])
+  withSd (sd + n) $ withEnv env' $ codev e
+  where
+    n = length bs
+    xs = [(y, e') | (y, [], e') <- bs]
+codev (Let True bs e) = undefined
 
-codec = undefined
+codec = codev -- undefined
 
 getvar :: Name -> Cg ()
 getvar x = do
