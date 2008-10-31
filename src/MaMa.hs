@@ -18,6 +18,7 @@ data MaMa
   | MUL
   | DIV
   | LEQ
+  | EQUAL
   | APPLY
   | UPDATE
   | HALT
@@ -55,6 +56,7 @@ showsMama (SUB)        = showString "sub"
 showsMama (MUL)        = showString "mul"
 showsMama (DIV)        = showString "div"
 showsMama (LEQ)        = showString "leq"
+showsMama (EQUAL)      = showString "eq"
 showsMama (APPLY)      = showString "apply"
 showsMama (UPDATE)     = showString "update"
 showsMama (HALT)       = showString "halt"
