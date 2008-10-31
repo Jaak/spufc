@@ -1,6 +1,6 @@
-
 import Pretty
 import CodeGen
+import AST
 
 --
 -- We have tiny dsl to simplify writing expressions:
@@ -9,6 +9,7 @@ infix 0 .=
 name .= e = (name, [], e)
 infixl 1 `app`
 app = App
+
 instance Num AST where
   fromInteger = Lit . fromInteger
   x + y = Builtin BAdd [x, y]
