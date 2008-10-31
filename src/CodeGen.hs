@@ -14,7 +14,11 @@ import Env as Env
 -- well we could generalise this with:
 --  builtin :: Builtin -> [MaMa]
 builtin :: Builtin -> MaMa
-builtin = undefined
+builtin BAdd = ADD
+builtin BMul = MUL
+builtin BSub = SUB
+builtin BLe  = LEQ
+builtin _ = undefined
 
 codeGen :: AST -> [MaMa]
 codeGen e = runCg $ do
@@ -67,20 +71,20 @@ codev (Abs xs e) = do
   b <- newLabel
   sd <- asks sd
   let
-    k = length xs
-    d = length zs
     zs = fvs (Abs xs e)
+    k = length xs
+    g = length zs
     env' = Env.fromList $
              zip xs [Local (-i) | i <- [0..]] ++
              zip zs [Global i   | i <- [0..]]
   zipWithM_ (\sd' -> withSd sd' . getvar) [sd ..] zs
   emits [
-    MKVEC d,
+    MKVEC g,
     MKFUNVAL a,
     JUMP b,
     LABEL a,
     TARG k]
-  withSd 0 (withEnv env' (codev e))
+  withSd 0 $ withEnv env' $ codev e
   emits [RETURN k, LABEL b]
 codev (App e es) = do
   a <- newLabel
@@ -99,10 +103,26 @@ codev (Let False bs e) = do
       return $ Env.insert y (Local (sd + i + 1)) env
   env' <- foldM step env (zip xs [0..])
   withSd (sd + n) $ withEnv env' $ codev e
+  emit (SLIDE n)
   where
     n = length bs
     xs = [(y, e') | (y, [], e') <- bs]
-codev (Let True bs e) = undefined
+codev (Let True bs e) = do
+  sd <- asks sd
+  env <- asks env
+  let
+    insert' = uncurry Env.insert
+    env' = foldr insert' env $ zip ys (map Local [sd + 1..])
+  emit (ALLOC n)
+  withSd (sd + n) $ withEnv env' $ do
+    forM_ (zip es [n, n-1 ..]) $ \(e', i) -> do
+      codec e'
+      emit (REWRITE i)
+    codev e
+  emit (SLIDE n)
+  where
+    n = length bs
+    (ys, es) = unzip [(y, e') | (y, [], e') <- bs]
 
 codec = codev -- undefined
 
@@ -140,3 +160,21 @@ fvs' (Let True bs e) = S.unions (fvs' e : ss) \\\ xs'
   where
     (xs', ss) = unzip [(x, fvs' e' \\\ xs) | (x, xs, e') <- bs]
 fvs' (Builtin _ es) = S.unions $ map fvs' es
+
+--
+
+t 1 = Let False [
+    ("a", [], Lit 19),
+    ("b", [], Builtin BMul [Var "a", Var "a"])]
+  (Builtin BAdd [Var "a", Var "b"])
+
+-- factorial of 8
+t 2 = Let True [
+    ("f", [], Abs ["x", "y"] (
+      Ifte (Builtin BLe [Var "y", Lit 1])
+        (Var "x")
+        (App (Var "f") [
+          Builtin BMul [Var "x", Var "y"],
+          Builtin BSub [Var "y", Lit 1]])
+    ))]
+  (App (Var "f") [Lit 1, Lit 8])
