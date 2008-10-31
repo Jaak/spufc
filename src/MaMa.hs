@@ -17,6 +17,7 @@ data MaMa
   | SUB
   | MUL
   | DIV
+  | LEQ
   | APPLY
   | UPDATE
   | HALT
@@ -53,6 +54,7 @@ showsMama (ADD)        = showString "add"
 showsMama (SUB)        = showString "sub"
 showsMama (MUL)        = showString "mul"
 showsMama (DIV)        = showString "div"
+showsMama (LEQ)        = showString "leq"
 showsMama (APPLY)      = showString "apply"
 showsMama (UPDATE)     = showString "update"
 showsMama (HALT)       = showString "halt"
@@ -65,7 +67,7 @@ showsMama (SLIDE k)    = showString "slide"    . space . shows k
 showsMama (ALLOC k)    = showString "alloc"    . space . shows k
 showsMama (REWRITE k)  = showString "rewrite"  . space . shows k 
 showsMama (MKVEC k)    = showString "mkvec"    . space . shows k
-showsMama (LABEL l)    = showChar '_' . shows l . showChar ':'
+showsMama (LABEL l)    = shows l               . showChar ':'
 showsMama (MKCLOS l)   = showString "mkclos"   . space . shows l
 showsMama (MKFUNVAL l) = showString "mkfunval" . space . shows l
 showsMama (MARK l)     = showString "mark"     . space . shows l
