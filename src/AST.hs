@@ -39,3 +39,4 @@ data AST
   | App AST [AST]
   | Let Bool [Binding] AST
   | Builtin Builtin [AST]
+  deriving (Eq,Show)
