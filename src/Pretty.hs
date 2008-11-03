@@ -37,5 +37,5 @@ prettyPrim e = parens (prettyAST' e)
 prettyApp e@(App _ _) = prettyAST' e
 prettyApp e = prettyPrim e
 
-prettyBind (b, ns, e) =
-  text b <+> hsep (map text ns) <+> char '=' <+> prettyAST' e
+prettyBind (b, e) =
+  text b <+> char '=' <+> prettyAST' e

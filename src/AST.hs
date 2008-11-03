@@ -23,8 +23,8 @@ data Builtin
   | BGt
   deriving (Eq,Show)
 
--- f x1 .. xn = e
-type Binding = (Name, [Name], AST)
+-- f = e
+type Binding = (Name, AST)
 
 -- Abstract syntax tree for PuF
 -- i don't really like the idea to have 2

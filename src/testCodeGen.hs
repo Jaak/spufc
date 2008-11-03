@@ -6,7 +6,7 @@ import AST
 -- We have tiny dsl to simplify writing expressions:
 
 infix 0 .=
-name .= e = (name, [], e)
+(.=) = (,)
 infixl 1 `app`
 app = App
 
@@ -22,20 +22,20 @@ instance Num AST where
 -- some tests:
 
 t 1 = Let False [
-    "a" .= Lit 19,
+    "a" .= 19,
     "b" .= Var "a" * Var "a"]
   (Var "a" + Var "b")
 
 -- factorial of 8
 t 2 = Let True [
     "f" .= Abs ["x", "y"] (
-      Ifte (Builtin BLe [Var "y", Lit 1])
+      Ifte (Builtin BLe [Var "y", 1])
         (Var "x")
         (Var "f" `app` [
           Var "x" * Var "y",
           Var "y" - 1])
     )]
-  (Var "f" `app` [Lit 1, Lit 8])
+  (Var "f" `app` [1, 8])
 
 -- odd / even
 t 3 = Let True [

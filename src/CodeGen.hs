@@ -104,11 +104,10 @@ codev (Let False bs e) = do
   env <- asks env
   let
     n = length bs
-    xs = [(y, e') | (y, [], e') <- bs]
     step env ((y, e'), i) = do
       withSd (sd + i) $ withEnv env $ codec e'
       return $ Env.insert y (Local (sd + i + 1)) env
-  env' <- foldM step env (zip xs [0..])
+  env' <- foldM step env (zip bs [0..])
   withSd (sd + n) $ withEnv env' $ codev e
   emit (SLIDE n)
 codev (Let True bs e) = do
@@ -116,7 +115,7 @@ codev (Let True bs e) = do
   env <- asks env
   let
     n = length bs
-    (ys, es) = unzip [(y, e') | (y, [], e') <- bs]
+    (ys, es) = unzip bs
     insert' = uncurry Env.insert
     env' = foldr insert' env $ zip ys (map Local [sd + 1..])
   emit (ALLOC n)
@@ -177,8 +176,8 @@ fvs' (App e es) = S.unions $ map fvs' (e : es)
 fvs' (Let False bs e) = loop bs
   where
     loop [] = fvs' e
-    loop ((x, ys, e') : bs) = fvs' e' \\\ ys `S.union` S.delete x (loop bs)
+    loop ((x, e') : bs) = fvs' e' `S.union` S.delete x (loop bs)
 fvs' (Let True bs e) = S.unions (fvs' e : ss) \\\ xs'
   where
-    (xs', ss) = unzip [(x, fvs' e' \\\ xs) | (x, xs, e') <- bs]
+    (xs', ss) = unzip [(x, fvs' e') | (x, e') <- bs]
 fvs' (Builtin _ es) = S.unions $ map fvs' es
