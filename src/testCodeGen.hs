@@ -73,3 +73,19 @@ t 7 = Let True [
     "a" .= Var "b",
     "b" .= Var"a"]
   (Var "a")
+
+-- stupid Y combinator
+t 8 = Let True [
+    "fix" .= Abs ["f"] (Var "f" `app` [Var "fix" `app` [Var "f"]]),
+    "step" .= Abs ["f", "x"] (Ifte (Builtin BEq [Var "x", 1])
+      (Var "x")
+      (Builtin BMul [Var "x", Var "f" `app` [Builtin BSub [Var "x", 1]]]))]
+  ((Var "fix" `app` [Var "step"]) `app` [5])
+
+-- ncier Y combinator
+t 9 = Let False [
+    "fix" .= Abs ["f"] (Let True ["x" .= Var "f" `app` [Var "x"]] (Var "x")),
+    "step" .= Abs ["f", "x"] (Ifte (Builtin BEq [Var "x", 1])
+      (Var "x")
+      (Builtin BMul [Var "x", Var "f" `app` [Builtin BSub [Var "x", 1]]]))]
+  ((Var "fix" `app` [Var "step"]) `app` [5])
