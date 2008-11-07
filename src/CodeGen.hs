@@ -99,7 +99,7 @@ codev (App e es) = do
   emits [
     APPLY,
     LABEL a]
-codev (Let False bs e) = do
+codev (Let NonRec bs e) = do
   sd <- asks sd
   env <- asks env
   let
@@ -110,7 +110,7 @@ codev (Let False bs e) = do
   env' <- foldM step env (zip bs [0..])
   withSd (sd + n) $ withEnv env' $ codev e
   emit (SLIDE n)
-codev (Let True bs e) = do
+codev (Let Rec bs e) = do
   sd <- asks sd
   env <- asks env
   let
@@ -173,11 +173,11 @@ fvs' (Lit _) = S.empty
 fvs' (Ifte e t f) = S.unions $ map fvs' [e, t, f]
 fvs' (Abs xs e) = fvs' e \\\ xs
 fvs' (App e es) = S.unions $ map fvs' (e : es)
-fvs' (Let False bs e) = loop bs
+fvs' (Let NonRec bs e) = loop bs
   where
     loop [] = fvs' e
     loop ((x, e') : bs) = fvs' e' `S.union` S.delete x (loop bs)
-fvs' (Let True bs e) = S.unions (fvs' e : ss) \\\ xs'
+fvs' (Let Rec bs e) = S.unions (fvs' e : ss) \\\ xs'
   where
     (xs', ss) = unzip [(x, fvs' e') | (x, e') <- bs]
 fvs' (Builtin _ es) = S.unions $ map fvs' es

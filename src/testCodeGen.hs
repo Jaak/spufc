@@ -21,13 +21,13 @@ instance Num AST where
 --
 -- some tests:
 
-t 1 = Let False [
+t 1 = Let NonRec [
     "a" .= 19,
     "b" .= Var "a" * Var "a"]
   (Var "a" + Var "b")
 
 -- factorial of 8
-t 2 = Let True [
+t 2 = Let Rec [
     "f" .= Abs ["x", "y"] (
       Ifte (Builtin BLe [Var "y", 1])
         (Var "x")
@@ -38,7 +38,7 @@ t 2 = Let True [
   (Var "f" `app` [1, 8])
 
 -- odd / even
-t 3 = Let True [
+t 3 = Let Rec [
     "odd" .= (Abs ["x"] (
         Ifte (Builtin BEq [Var "x", 0])
              0
@@ -52,30 +52,30 @@ t 3 = Let True [
   (Var "even" `app` [11])
 
 --
-t 4 = Let False [
+t 4 = Let NonRec [
     "add" .= Abs ["x", "y"] (Var "x" + Var "y"),
     "mul" .= Abs ["x", "y"] (Var "x" * Var "y")]
   (Var "add" `app` [10, Var "mul" `app` [10, 11]])
 
 -- partial application
-t 5 = Let True [
+t 5 = Let Rec [
     "add" .= Abs ["x", "y"] (Var "x" + Var "y")]
   (Var "add" `app` [10] `app` [11])
 
 --
-t 6 = Let True [
+t 6 = Let Rec [
     "one" .= Abs ["x"] (App (Var "two") [Var "x"]),
     "two" .= Abs ["x"] 2]
   (Var "one" `app` [1])
 
 -- infinite loop
-t 7 = Let True [
+t 7 = Let Rec [
     "a" .= Var "b",
     "b" .= Var"a"]
   (Var "a")
 
 -- stupid Y combinator
-t 8 = Let True [
+t 8 = Let Rec [
     "fix" .= Abs ["f"] (Var "f" `app` [Var "fix" `app` [Var "f"]]),
     "step" .= Abs ["f", "x"] (Ifte (Builtin BEq [Var "x", 1])
       (Var "x")
@@ -83,8 +83,8 @@ t 8 = Let True [
   ((Var "fix" `app` [Var "step"]) `app` [5])
 
 -- ncier Y combinator
-t 9 = Let False [
-    "fix" .= Abs ["f"] (Let True ["x" .= Var "f" `app` [Var "x"]] (Var "x")),
+t 9 = Let NonRec [
+    "fix" .= Abs ["f"] (Let Rec ["x" .= Var "f" `app` [Var "x"]] (Var "x")),
     "step" .= Abs ["f", "x"] (Ifte (Builtin BEq [Var "x", 1])
       (Var "x")
       (Builtin BMul [Var "x", Var "f" `app` [Builtin BSub [Var "x", 1]]]))]
