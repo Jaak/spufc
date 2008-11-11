@@ -45,18 +45,18 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
 %%
 
 parse :: { AST.AST }
-  : program  { AST.Let True $1 (AST.Var "main")} 
+  : program  { AST.Let AST.Rec $1 (AST.Var "main")} 
 
 program :: { [AST.Binding] }
   :                   {         [] }
   | program rdecl     { $1 ++ [$2] }
   
-rdecl :: { (AST.Name, [AST.Name], AST.AST) }
-  : flhs '=' expr ';' { (head $1, tail $1, $3) }
+rdecl :: { (AST.Name, AST.AST) }
+  : flhs '=' expr ';' { (head $1, case tail $1 of [] -> $3 ; xs -> AST.Abs xs $3) }
   
-ldecl :: { (AST.Name, [AST.Name], AST.AST) }
-  : flhs '=' expr ';' { (head $1, tail $1, $3) }
-  | tlhs '=' expr ';' { (head $1, tail $1, $3) }
+ldecl :: { (AST.Name, AST.AST) }
+  : flhs '=' expr ';' { (head $1, case tail $1 of [] -> $3 ; xs -> AST.Abs xs $3) }
+  | tlhs '=' expr ';' { (head $1, case tail $1 of [] -> $3 ; xs -> AST.Abs xs $3) }
 
 ldecl_s :: { [AST.Binding] }
   :               {         [] }
