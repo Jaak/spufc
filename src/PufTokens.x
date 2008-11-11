@@ -74,6 +74,8 @@ data Token = Lit Int
            | Letrec
            | In
            | Eq
+           | LeftParen
+           | RightParen
            | Comma
            | Semicolon
            | ParenLeft | ParenRight

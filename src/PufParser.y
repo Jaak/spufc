@@ -96,8 +96,8 @@ expr :: { AST.AST }
   | expr bop pr_expr            { AST.Builtin $2 [$1,$3] }
   | if expr then expr else expr { AST.Ifte $2 $4 $6 }
   | fn id_s mapsto expr         { AST.Abs       $2 $4 }
-  | let ldecl_s in expr         { AST.Let False $2 $4 }
-  | letrec ldecl_s in expr      { AST.Let True  $2 $4 }
+  | let ldecl_s in expr         { AST.Let AST.NonRec $2 $4 }
+  | letrec ldecl_s in expr      { AST.Let AST.Rec    $2 $4 }
   | expr pr_expr                { case ($1) of 
                                     AST.App a b -> AST.App a (b++[$2])
                                     e           -> AST.App e [$2]

@@ -4,6 +4,7 @@ module MaMa (MaMa(..), Label, allLabels) where
 -- as we need unique label supply
 -- type Label = Int ?
 newtype Label = Label Int
+  deriving (Eq, Ord)
 
 allLabels :: [Label]
 allLabels = map Label [0..]
@@ -16,6 +17,8 @@ data MaMa
   | SUB
   | MUL
   | DIV
+  | LEQ
+  | EQUAL
   | APPLY
   | UPDATE
   | HALT
@@ -30,6 +33,7 @@ data MaMa
   | MKVEC Int
   | LABEL Label
   | MKCLOS Label
+  | MKFUNVAL Label
   | MARK Label
   | JUMPZ Label
   | JUMP Label
@@ -51,6 +55,8 @@ showsMama (ADD)        = showString "add"
 showsMama (SUB)        = showString "sub"
 showsMama (MUL)        = showString "mul"
 showsMama (DIV)        = showString "div"
+showsMama (LEQ)        = showString "leq"
+showsMama (EQUAL)      = showString "eq"
 showsMama (APPLY)      = showString "apply"
 showsMama (UPDATE)     = showString "update"
 showsMama (HALT)       = showString "halt"
@@ -65,6 +71,7 @@ showsMama (REWRITE k)  = showString "rewrite"  . space . shows k
 showsMama (MKVEC k)    = showString "mkvec"    . space . shows k
 showsMama (LABEL l)    = shows l               . showChar ':'
 showsMama (MKCLOS l)   = showString "mkclos"   . space . shows l
+showsMama (MKFUNVAL l) = showString "mkfunval" . space . shows l
 showsMama (MARK l)     = showString "mark"     . space . shows l
 showsMama (JUMPZ l)    = showString "jumpz"    . space . shows l
 showsMama (JUMP l)     = showString "jump"     . space . shows l

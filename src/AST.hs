@@ -1,5 +1,5 @@
 module AST
-  (Name, Literal, AST(..), Builtin(..),Binding)
+  (Name, Literal, AST(..), Builtin(..), RecOrNot(..), Binding)
   where
 
 type Name = String
@@ -25,8 +25,11 @@ data Builtin
   | USel Int 
   deriving (Eq,Show)
 
--- f x1 .. xn = e
-type Binding = (Name, [Name], AST)
+-- f = e
+type Binding = (Name, AST)
+
+data RecOrNot = Rec | NonRec
+  deriving (Eq, Show)
 
 -- Abstract syntax tree for PuF
 -- i don't really like the idea to have 2
@@ -41,6 +44,6 @@ data AST
   | Ifte AST AST AST
   | Abs [Name] AST
   | App AST [AST]
-  | Let Bool [Binding] AST
+  | Let RecOrNot [Binding] AST
   | Builtin Builtin [AST]
-  deriving (Show,Eq)
+  deriving (Eq,Show)

@@ -1,6 +1,6 @@
 module Env 
   (Env, Address(..),
-  lookup, insert, empty
+  lookup, insert, empty, fromList
   ) where
 
 import AST (Name)
@@ -23,3 +23,6 @@ insert name addr (Env m) = Env (M.insert name addr m)
 
 empty :: Env
 empty = Env M.empty
+
+fromList :: [(Name, Address)] -> Env
+fromList = Env . M.fromList
