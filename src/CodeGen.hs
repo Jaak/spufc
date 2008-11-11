@@ -1,14 +1,14 @@
 module CodeGen (codeGen) where
 
-import Control.Monad
-import Control.Monad.State
-import Control.Monad.Reader
+import Control.Monad (forM_, foldM, zipWithM_)
 import qualified Data.Set as S
 
 import CgMonad
 import AST
+import Unique (Supply)
+import Ident (Ident)
 import MaMa
-import Env as Env
+import qualified Env
 
 -- each builtin must correspond to some MaMa instruction
 -- well we could generalise this with:
@@ -21,17 +21,17 @@ builtin BLe  = LEQ
 builtin BEq  = EQUAL
 builtin _ = undefined
 
-codeGen :: AST -> [MaMa]
-codeGen e = runCg $ do
+codeGen :: Supply -> AST Ident -> [MaMa]
+codeGen s e = runCg s $ do
   codev e
   emit HALT
 
-codev, codeb, codec  :: AST -> Cg ()
+codev, codeb, codec  :: AST Ident -> Cg ()
 
 -- simple expressions
 codeb (Lit x) = emit (LOADC x)
 codeb (Builtin bi es) = do
-  sd <- asks sd
+  sd <- askSd
   zipWithM_  (\sd' -> withSd sd' . codeb) [sd ..] es
   emit (builtin bi)
 codeb (Ifte e t f) = do
@@ -50,7 +50,7 @@ codeb e = do
 
 codev (Lit x) = emits [LOADC x, MKBASIC]
 codev (Builtin bi es) = do
-  sd <- asks sd
+  sd <- askSd
   zipWithM_  (\sd' -> withSd sd' . codeb) [sd ..] es
   emit (builtin bi)
   emit MKBASIC
@@ -70,14 +70,14 @@ codev (Var x) = do
 codev (Abs xs e) = do
   a <- newLabel
   b <- newLabel
-  sd <- asks sd
+  sd <- askSd
   let
     zs = fvs (Abs xs e)
     k = length xs
     g = length zs
     env' = Env.fromList $
-             zip xs [Local (-i) | i <- [0..]] ++
-             zip zs [Global i   | i <- [0..]]
+             zip xs [Env.Local (-i) | i <- [0..]] ++
+             zip zs [Env.Global i   | i <- [0..]]
   zipWithM_ (\sd' -> withSd sd' . getvar) [sd ..] zs
   emits [
     MKVEC g,
@@ -91,7 +91,7 @@ codev (Abs xs e) = do
     LABEL b]
 codev (App e es) = do
   a <- newLabel
-  sd <- asks sd
+  sd <- askSd
   let m = length es
   emit (MARK a)
   zipWithM_ (\sd' -> withSd sd' . codec) [sd + 3 ..] (reverse es)
@@ -100,24 +100,24 @@ codev (App e es) = do
     APPLY,
     LABEL a]
 codev (Let NonRec bs e) = do
-  sd <- asks sd
-  env <- asks env
+  sd <- askSd
+  env <- askEnv
   let
     n = length bs
     step env ((y, e'), i) = do
       withSd (sd + i) $ withEnv env $ codec e'
-      return $ Env.insert y (Local (sd + i + 1)) env
+      return $ Env.insert y (Env.Local (sd + i + 1)) env
   env' <- foldM step env (zip bs [0..])
   withSd (sd + n) $ withEnv env' $ codev e
   emit (SLIDE n)
 codev (Let Rec bs e) = do
-  sd <- asks sd
-  env <- asks env
+  sd <- askSd
+  env <- askEnv
   let
     n = length bs
     (ys, es) = unzip bs
     insert' = uncurry Env.insert
-    env' = foldr insert' env $ zip ys (map Local [sd + 1..])
+    env' = foldr insert' env $ zip ys (map Env.Local [sd + 1..])
   emit (ALLOC n)
   withSd (sd + n) $ withEnv env' $ do
     forM_ (zip es [n, n-1 ..]) $ \(e', i) -> do
@@ -128,14 +128,14 @@ codev (Let Rec bs e) = do
 
 -- closure stuff
 codec e = do
-  sd <- asks sd
-  env <- asks env
+  sd <- askSd
+  env <- askEnv
   a <- newLabel
   b <- newLabel
   let
     zs = fvs e
     g = length zs
-    env' = Env.fromList $ zip zs (map Global [0..])
+    env' = Env.fromList $ zip zs (map Env.Global [0..])
   zipWithM_ (\sd' -> withSd sd' . getvar) [sd ..] zs
   emits [
     MKVEC g,
@@ -147,14 +147,14 @@ codec e = do
     UPDATE,
     LABEL b]
 
-getvar :: Name -> Cg ()
+getvar :: Ident -> Cg ()
 getvar x = do
-  env <- asks env
+  env <- askEnv
   case Env.lookup env x of
-    Local i -> do
-      sd <- asks sd
+    Env.Local i -> do
+      sd <- askSd
       emit (PUSHLOC (sd - i))
-    Global i -> emit (PUSHGLOB i)
+    Env.Global i -> emit (PUSHGLOB i)
 
 -- TODO: find a better place for following code
 
@@ -165,7 +165,7 @@ s \\\ [] = s
 s \\\ (x : xs) = (S.delete x s) \\\ xs
 
 -- find all free variables of the term
-fvs :: AST -> [Name]
+fvs :: AST Ident -> [Ident]
 fvs = S.toList . fvs'
 
 fvs' (Var x) = S.singleton x
