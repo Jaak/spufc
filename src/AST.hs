@@ -1,5 +1,5 @@
 module AST
-  (Literal, AST(..), Builtin(..), RecOrNot(..))
+  (Literal, AST(..), Builtin(..), RecOrNot(..), Binding)
   where
 
 type Literal = Int
@@ -8,6 +8,7 @@ type Literal = Int
 -- i don't see any good reason to separate those 2
 data Builtin
   = UNeg
+  | UNot
   | BAdd
   | BSub
   | BMul
@@ -19,6 +20,7 @@ data Builtin
   | BLt
   | BGe
   | BGt
+  | USel Int 
   deriving (Eq,Show)
 
 -- f = e
@@ -27,14 +29,11 @@ type Binding a = (a, AST a)
 data RecOrNot = Rec | NonRec
   deriving (Eq, Show)
 
--- Abstract syntax tree for PuF
--- i don't really like the idea to have 2
--- constructors here for both let and letrec,
--- so i currently use Bool to flag if the
--- let is recursive or not (Bool should be replaced)
 data AST a
   = Var a
   | Lit Literal
+  | Tuple [AST a]
+  | List [AST a]
   | Ifte (AST a) (AST a) (AST a)
   | Abs [a] (AST a)
   | App (AST a) [AST a]
