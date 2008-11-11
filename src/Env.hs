@@ -3,26 +3,26 @@ module Env
   lookup, insert, empty, fromList
   ) where
 
-import AST (Name)
-
 import Prelude hiding (lookup)
 import Data.Map (Map)
 import qualified Data.Map as M
+
+import Ident
 
 data Address
   = Local Int
   | Global Int
 
-newtype Env = Env (Map Name Address)
+newtype Env = Env (Map Ident Address)
 
-lookup :: Env -> Name -> Address
-lookup (Env m) name = m M.! name
+lookup :: Env -> Ident -> Address
+lookup (Env m) id = m M.! id
 
-insert :: Name -> Address -> (Env -> Env)
-insert name addr (Env m) = Env (M.insert name addr m)
+insert :: Ident -> Address -> (Env -> Env)
+insert id addr (Env m) = Env (M.insert id addr m)
 
 empty :: Env
 empty = Env M.empty
 
-fromList :: [(Name, Address)] -> Env
+fromList :: [(Ident, Address)] -> Env
 fromList = Env . M.fromList
