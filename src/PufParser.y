@@ -5,8 +5,6 @@ import PufTokens
 import qualified AST
 import qualified Data.ByteString.Lazy.Char8 as ByteString
 
-type Name = String
-
 }
 
 %name parse
@@ -127,6 +125,9 @@ select :: { Int }
   
 
 {
+
+type Name = String
+
 happyError _ = error ("Parse error\n")
 
 main = do

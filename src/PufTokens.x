@@ -1,5 +1,5 @@
 {
-module PufTokens (Token(..), alexScanTokens, main, Builtin(..)) where
+module PufTokens (Token(..), alexScanTokens, Builtin(..)) where
 
 import AST (Builtin(..))
 
