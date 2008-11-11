@@ -1,0 +1,4 @@
+src/*.o
+src/*.hi
+src/PufTokens.hs
+src/PufParser.hs

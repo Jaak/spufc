@@ -1,5 +1,5 @@
 module AST
-  (Name, Literal, AST(..), Builtin(..))
+  (Name, Literal, AST(..), Builtin(..),Binding)
   where
 
 type Name = String
@@ -10,6 +10,7 @@ type Literal = Int
 -- i don't see any good reason to separate those 2
 data Builtin
   = UNeg
+  | UNot
   | BAdd
   | BSub
   | BMul
@@ -21,6 +22,7 @@ data Builtin
   | BLt
   | BGe
   | BGt
+  | USel Int 
   deriving (Eq,Show)
 
 -- f x1 .. xn = e
@@ -34,8 +36,11 @@ type Binding = (Name, [Name], AST)
 data AST
   = Var Name
   | Lit Literal
+  | Tuple [AST]
+  | List  [AST]
   | Ifte AST AST AST
   | Abs [Name] AST
   | App AST [AST]
   | Let Bool [Binding] AST
   | Builtin Builtin [AST]
+  deriving (Show,Eq)
