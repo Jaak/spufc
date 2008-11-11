@@ -1,0 +1,25 @@
+Name:                     tm
+Version:                  0.1
+Cabal-Version:            >= 1.4
+License:	              BSD3
+build-type:               Simple
+
+Executable tm
+  Build-Tools:            alex, happy
+  Build-Depends:          base, bytestring, array
+  Main-Is:                Main.hs
+  Hs-Source-Dirs:         src
+  Other-Modules:
+                          AST,
+                          CgMonad,
+                          CodeGen,
+                          Env,
+                          Ident,
+                          Main,
+                          MaMa,
+                          Pretty,
+                          PufParser,
+                          PufTokens,
+                          Rename,
+                          Unique
+
