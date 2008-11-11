@@ -1,8 +1,6 @@
 module AST
-  (Name, Literal, AST(..), Builtin(..), RecOrNot(..))
+  (Literal, AST(..), Builtin(..), RecOrNot(..))
   where
-
-type Name = String
 
 type Literal = Int
 
@@ -24,7 +22,7 @@ data Builtin
   deriving (Eq,Show)
 
 -- f = e
-type Binding = (Name, AST)
+type Binding a = (a, AST a)
 
 data RecOrNot = Rec | NonRec
   deriving (Eq, Show)
@@ -34,12 +32,12 @@ data RecOrNot = Rec | NonRec
 -- constructors here for both let and letrec,
 -- so i currently use Bool to flag if the
 -- let is recursive or not (Bool should be replaced)
-data AST
-  = Var Name
+data AST a
+  = Var a
   | Lit Literal
-  | Ifte AST AST AST
-  | Abs [Name] AST
-  | App AST [AST]
-  | Let RecOrNot [Binding] AST
-  | Builtin Builtin [AST]
+  | Ifte (AST a) (AST a) (AST a)
+  | Abs [a] (AST a)
+  | App (AST a) [AST a]
+  | Let RecOrNot [Binding a] (AST a)
+  | Builtin Builtin [AST a]
   deriving (Eq,Show)
