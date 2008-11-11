@@ -1,13 +1,12 @@
-module MaMa (MaMa(..), Label, allLabels) where
+module MaMa (MaMa(..), Label, mkLabel) where
 
--- this will need to be changed
--- as we need unique label supply
--- type Label = Int ?
-newtype Label = Label Int
+import Unique
+
+newtype Label = Label Unique
   deriving (Eq, Ord)
 
-allLabels :: [Label]
-allLabels = map Label [0..]
+mkLabel :: Unique -> Label
+mkLabel = Label
 
 data MaMa
   = MKBASIC
