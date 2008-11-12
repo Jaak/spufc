@@ -1,11 +1,9 @@
 module Main (main) where
 
-import qualified PufParser
-import qualified PufTokens
-import qualified AST
+import Parser
+import System.Environment
 import qualified Data.ByteString.Lazy.Char8 as ByteString
 
 main :: IO ()
-main = do
-  s <- ByteString.takeWhile (/= '\n') `fmap` ByteString.getContents
-  print $ PufParser.parse $ PufTokens.alexScanTokens s
+main = (fmap head $ getArgs) >>= parseFile >>= print
+     

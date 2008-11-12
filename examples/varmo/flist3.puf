@@ -1,0 +1,10 @@
+#include prelude.puf
+
+// Length of the list (using functional representation).
+
+length xs    = xs length1 0;
+
+length1 x xs = 1 + length xs;
+
+main = length (cons 2 (cons 3 (cons 4 nil)));
+

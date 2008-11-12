@@ -1,0 +1,7 @@
+#include prelude.puf
+
+// Infinite lists (using functional representation).
+
+infinite x = cons x (infinite x);
+
+main = hd (tl (infinite 4));

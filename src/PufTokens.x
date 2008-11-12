@@ -13,9 +13,17 @@ $alpha1 = [\x00-\xF5 \xFA-\xFF]
 
 @unialpha = ($alpha0 | \x01 $alpha1)
 
+@comment1  =  \/ \* ( \/ | (. | \n) | \* (. | \n) )*  \*\/
+@comment2  = \/\/ .* \n
+@comment   = @comment1 | @comment2
+
 tokens :-
   -- ignore whitespace
   $white                  ;
+  @comment                ;
+  
+  -- includes
+  \#include $white* (@unialpha | \.)* { Include . drop 9 . ByteString.unpack}
   
   -- if then else
   if                      { const If }
@@ -65,6 +73,7 @@ tokens :-
 
 data Token = Lit Int
            | Id  String
+           | Include String
            | Bi  Builtin
            | Sel
            | Fn

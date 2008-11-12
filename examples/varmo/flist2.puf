@@ -1,0 +1,8 @@
+#include prelude.puf
+
+// Letrec-expressions and "cyclic" lists.
+
+infinite x = letrec xs = cons x xs;
+             in xs;
+
+main = hd (tl (tl (infinite 4)));

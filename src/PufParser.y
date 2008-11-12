@@ -1,5 +1,5 @@
 {
-module PufParser (parse) where
+module PufParser (parseFile, parseExpr) where
 
 import PufTokens
 import qualified AST
@@ -7,7 +7,8 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
 
 }
 
-%name parse
+%name expr expr
+%name parse parse
 %tokentype { Token }
 
 %token
@@ -44,8 +45,8 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
   err      { Error $$ }
 %%
 
-parse :: { AST.AST Name}
-  : program  { AST.Let AST.Rec $1 (AST.Var "main")} 
+parse :: { [AST.Binding Name] }
+  : program  { $1 } 
 
 program :: { [AST.Binding Name] }
   :                   {         [] }
@@ -95,7 +96,7 @@ expr :: { AST.AST Name }
   | uop expr                    { AST.Builtin $1 [$2] }
   | expr bop pr_expr            { AST.Builtin $2 [$1,$3] }
   | if expr then expr else expr { AST.Ifte $2 $4 $6 }
-  | fn id_s mapsto expr         { AST.Abs       $2 $4 }
+  | fn id id_s mapsto expr      { AST.Abs       ($2:$3) $5 }
   | let ldecl_s in expr         { AST.Let AST.NonRec $2 $4 }
   | letrec ldecl_s in expr      { AST.Let AST.Rec    $2 $4 }
   | expr pr_expr                { case ($1) of 
@@ -128,9 +129,12 @@ select :: { Int }
 
 type Name = String
 
-happyError _ = error ("Parse error\n")
+happyError x = error ("Parse error: " ++ show  x ++ "\n")
 
-main = do
-    s <- ByteString.getContents
-    print $ parse $ alexScanTokens (ByteString.takeWhile (/= '\n') s)
+parseExpr :: [Token] -> AST.AST Name
+parseExpr = expr
+
+parseFile ::  [Token] -> [AST.Binding Name]
+parseFile = parse
+
 }
