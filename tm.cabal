@@ -1,12 +1,12 @@
 Name:                     tm
 Version:                  0.1
-Cabal-Version:            >= 1.4
-License:	              BSD3
+Cabal-Version:            >= 1.2
+License:                  BSD3
 build-type:               Simple
 
 Executable tm
   Build-Tools:            alex, happy
-  Build-Depends:          base, bytestring, array
+  Build-Depends:          base, bytestring, array, filepath, directory, pretty, containers
   Main-Is:                Main.hs
   Hs-Source-Dirs:         src
   Other-Modules:
@@ -20,6 +20,7 @@ Executable tm
                           Pretty,
                           PufParser,
                           PufTokens,
+                          Parser,
                           Rename,
                           Unique
 
