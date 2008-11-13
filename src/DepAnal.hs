@@ -20,8 +20,8 @@ data DANode
   deriving Show
 
 depOn :: DANode -> DANode -> Bool
-depOn _ (Root _ _) = False
-depOn n (Node x _ _) = x `S.member` nodeFvs n
+depOn (Root _ _) _ = False
+depOn (Node x _ _) n = x `S.member` nodeFvs n
 
 nodeFvs (Root _ s) = s
 nodeFvs (Node _ _ s) = s
@@ -36,6 +36,8 @@ depAnal (Let NonRec bs e) = Let NonRec (map (second depAnal) bs) (depAnal e)
 depAnal (Ifte e t f) = Ifte (depAnal e) (depAnal t) (depAnal f)
 depAnal (Builtin bi es) = Builtin bi (map depAnal es)
 
+-- edges are backwards because we want to remove nodes that are
+-- not reachable from |e|.
 mkDepGraph :: [Binding Ident] -> AST Ident -> Gr DANode ()
 mkDepGraph bs e = graph
   where
@@ -43,15 +45,16 @@ mkDepGraph bs e = graph
     fvs' e = fvs e `S.intersection` univ
     mkNode (x, e') = Node x e' (fvs' e')
     nodes = (0, Root e (fvs' e)) : zip [1..] (map mkNode bs)
-    edges = [(i, j, ()) | (i, n) <- nodes, (j, m) <- nodes, n `depOn` m]
+    edges = [(j, i, ()) | (i, n) <- nodes, (j, m) <- nodes, n `depOn` m]
     graph = mkGraph nodes edges
 
+-- also flip the edges to correct order
 toStrong :: Gr DANode () -> Gr [DANode] ()
 toStrong g = graph
   where
     nodes = zip [0..] . map (map (fromJust . lab g)) $ scc g
     p ns ms = or [n `depOn` m | n <- ns, m <- ms]
-    edges = [(j, i, ()) | (i, ns) <- nodes, (j, ms) <- nodes, ns `p` ms]
+    edges = [(i, j, ()) | (i, ns) <- nodes, (j, ms) <- nodes, ns `p` ms]
     graph = mkGraph nodes edges
 
 rmUnreachable :: Gr DANode () -> Gr DANode ()
