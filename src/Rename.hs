@@ -1,4 +1,4 @@
-module Rename (rename) where
+module Rename (rename, RenameError) where
 
 import AST
 import Ident

@@ -9,7 +9,6 @@ import MaMa
 import Env as Env
 
 import Unique
-import MonadUniq
 
 -- cg = code gen
 

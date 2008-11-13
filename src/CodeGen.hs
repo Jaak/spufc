@@ -1,7 +1,6 @@
 module CodeGen (codeGen) where
 
 import Control.Monad (forM_, foldM, zipWithM_)
-import qualified Data.Set as S
 
 import CgMonad
 import AST
@@ -9,6 +8,7 @@ import Unique (Supply)
 import Ident (Ident)
 import MaMa
 import qualified Env
+import Fvs (fvList)
 
 -- each builtin must correspond to some MaMa instruction
 -- well we could generalise this with:
@@ -72,7 +72,7 @@ codev (Abs xs e) = do
   b <- newLabel
   sd <- askSd
   let
-    zs = fvs (Abs xs e)
+    zs = fvList (Abs xs e)
     k = length xs
     g = length zs
     env' = Env.fromList $
@@ -133,7 +133,7 @@ codec e = do
   a <- newLabel
   b <- newLabel
   let
-    zs = fvs e
+    zs = fvList e
     g = length zs
     env' = Env.fromList $ zip zs (map Env.Global [0..])
   zipWithM_ (\sd' -> withSd sd' . getvar) [sd ..] zs
@@ -155,29 +155,3 @@ getvar x = do
       sd <- askSd
       emit (PUSHLOC (sd - i))
     Env.Global i -> emit (PUSHGLOB i)
-
--- TODO: find a better place for following code
-
--- remove many elements from the set, just like (\\)
--- but with list instead of set as second argument
-(\\\) :: Ord a => S.Set a -> [a] -> S.Set a
-s \\\ [] = s
-s \\\ (x : xs) = (S.delete x s) \\\ xs
-
--- find all free variables of the term
-fvs :: AST Ident -> [Ident]
-fvs = S.toList . fvs'
-
-fvs' (Var x) = S.singleton x
-fvs' (Lit _) = S.empty
-fvs' (Ifte e t f) = S.unions $ map fvs' [e, t, f]
-fvs' (Abs xs e) = fvs' e \\\ xs
-fvs' (App e es) = S.unions $ map fvs' (e : es)
-fvs' (Let NonRec bs e) = loop bs
-  where
-    loop [] = fvs' e
-    loop ((x, e') : bs) = fvs' e' `S.union` S.delete x (loop bs)
-fvs' (Let Rec bs e) = S.unions (fvs' e : ss) \\\ xs'
-  where
-    (xs', ss) = unzip [(x, fvs' e') | (x, e') <- bs]
-fvs' (Builtin _ es) = S.unions $ map fvs' es
