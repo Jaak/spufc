@@ -6,13 +6,14 @@ build-type:               Simple
 
 Executable tm
   Build-Tools:            alex, happy
-  Build-Depends:          base, bytestring, array, filepath, directory, pretty, containers, mtl
+  Build-Depends:          base, bytestring, array, filepath, directory, pretty, containers, mtl, fgl
   Main-Is:                Main.hs
   Hs-Source-Dirs:         src
   Other-Modules:
                           AST,
                           CgMonad,
                           CodeGen,
+                          DepAnal,
                           Env,
                           Ident,
                           Main,
