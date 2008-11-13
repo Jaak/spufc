@@ -10,6 +10,7 @@ import Control.Monad (forM_)
 
 import Parser
 import Pretty
+import DepAnal
 import qualified AST
 import qualified Rename
 import qualified Unique
@@ -53,4 +54,4 @@ main = do
           sup <- Unique.newSupply
           case Rename.rename sup $ AST.Let AST.Rec bs (AST.Var "main") of
             Left _ -> putStrLn "Errur"
-            Right t -> putStrLn $ prettyAST $ t
+            Right t -> putStrLn $ prettyAST $ depAnal t
