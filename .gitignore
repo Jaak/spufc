@@ -2,3 +2,6 @@ src/*.o
 src/*.hi
 src/PufTokens.hs
 src/PufParser.hs
+src/Main
+Setup*
+dest/*

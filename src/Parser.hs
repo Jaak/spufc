@@ -6,6 +6,9 @@ import qualified PufTokens as PT
 import qualified AST
 import qualified Data.ByteString.Lazy.Char8 as BS
 
+import Control.Monad (filterM)
+import System.Directory
+import System.FilePath
 
 rawTokens :: FilePath -> IO [PT.RawToken]
 rawTokens = fmap PT.alexScanTokens . BS.readFile
@@ -13,20 +16,23 @@ rawTokens = fmap PT.alexScanTokens . BS.readFile
 report_fail :: (Monad m) => FilePath -> PT.Pos -> String -> m a
 report_fail fp (b,l,c) str = fail (fp ++ ":" ++ show l ++ ":" ++ show c ++ " Lexer:" ++ str)
 
-convertTokens :: FilePath -> [PT.RawToken] -> IO [(PT.Token, PT.Pos, FilePath)]
-convertTokens f []                         = return []
-convertTokens f (PT.Error     stri p : xs) = report_fail f p stri
-convertTokens f (PT.JustToken x    p : xs) = fmap ((x,p,f):) $ convertTokens f xs 
-convertTokens f (PT.Include   file p : xs) = 
-    do rt   <- rawTokens file 
-       ex   <- convertTokens file rt
-       rest <- convertTokens f    xs
-       return $ ex ++ rest
+convertTokens :: [FilePath] -> FilePath -> [PT.RawToken] -> IO [(PT.Token, PT.Pos, FilePath)]
+convertTokens includes = loop
+    where loop f []                         = return []
+          loop f (PT.Error     stri p : xs) = report_fail f p stri
+          loop f (PT.JustToken x    p : xs) = fmap ((x,p,f):) $ loop f xs 
+          loop f (PT.Include   file p : xs) = 
+              do fs <- filterM doesFileExist $ map (</> file) includes
+                 case fs of
+                   [] -> fail "Include not found"
+                   (fp:_) -> do
+                        rt   <- rawTokens fp
+                        ex   <- loop fp rt
+                        rest <- loop f  xs
+                        return $ ex ++ rest
 
-parseFile :: FilePath -> IO [AST.Binding String]
-parseFile fp = do toks <- rawTokens fp >>= convertTokens fp 
---                  print $ map (\(x,_,_) -> x) toks
-                  return $ PP.parseFile toks
+parseFile :: [FilePath] -> FilePath -> IO [AST.Binding String]
+parseFile includes fp = fmap PP.parseFile $ rawTokens fp >>= convertTokens includes fp
 
 expr_tokens :: [PT.RawToken] -> Either String [(PT.Token,PT.Pos,FilePath)]
 expr_tokens = mapM slfs
