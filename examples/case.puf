@@ -1,0 +1,16 @@
+
+head x = 
+ case x of
+  []   -> error ;
+  x:ys -> x;
+
+tail x = 
+ case x of
+  []   -> error ;
+  x:ys -> ys;
+
+alist = [ 1 , 2 , 3 , 4 ];
+
+lsnd x = head (tail x) ;
+
+main  = lsnd alist;

@@ -56,12 +56,17 @@ tokens :-
   \>                      { \ p x -> JustToken (Bi BGt ) (tr p) }
   >=                      { \ p x -> JustToken (Bi BGe ) (tr p) }
   \<=                     { \ p x -> JustToken (Bi BLe ) (tr p) }
+  \|\|                    { \ p x -> JustToken (Bi BOr ) (tr p) }
+  \&\&                    { \ p x -> JustToken (Bi BAnd) (tr p) }
   
   -- let's
   let                     { \ p x -> JustToken Let       (tr p) }
   letrec                  { \ p x -> JustToken Letrec    (tr p) }
+  case                    { \ p x -> JustToken Case      (tr p) }
+  of                      { \ p x -> JustToken Of        (tr p) }
   =                       { \ p x -> JustToken Eq        (tr p) }
   \;                      { \ p x -> JustToken Semicolon (tr p) }
+  \:                      { \ p x -> JustToken Colon     (tr p) }
   in                      { \ p x -> JustToken In        (tr p) }
   
   -- literals and identificators
@@ -90,7 +95,8 @@ data Token = Lit Int
            | Letrec
            | In
            | Eq
-           | Comma       | Semicolon
+           | Case        | Of
+           | Comma       | Semicolon    | Colon
            | ParenLeft   | ParenRight
            | BracketLeft | BracketRight
            deriving (Show, Eq)

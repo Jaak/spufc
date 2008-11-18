@@ -9,7 +9,7 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
 
 %name expr expr
 %name parse parse
-%tokentype { (Token,Pos,FilePath)}
+%tokentype {(Token,Pos,FilePath)}
 
 %token
   lit      { (Lit $$       ,_,_)}
@@ -25,19 +25,25 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
   '<'      { (Bi BLt       ,_,_)}
   '<='     { (Bi BLe       ,_,_)}
   '=='     { (Bi BEq       ,_,_)}
+  '/='     { (Bi BNe       ,_,_)}
   '>'      { (Bi BGt       ,_,_)}
   '>='     { (Bi BGe       ,_,_)}
+  '||'     { (Bi BOr       ,_,_)}
+  '&&'     { (Bi BAnd      ,_,_)}
   fn       { (Fn           ,_,_)}
   if       { (If           ,_,_)}
   then     { (Then         ,_,_)}
   else     { (Else         ,_,_)}
-  mapsto   { (MapsTo       ,_,_)}
+  '->'     { (MapsTo       ,_,_)}
   let      { (Let          ,_,_)}
   letrec   { (Letrec       ,_,_)}
   in       { (In           ,_,_)}
+  case     { (Case         ,_,_)}
+  of       { (Of           ,_,_)}
   '='      { (Eq           ,_,_)}
   ','      { (Comma        ,_,_)}
   ';'      { (Semicolon    ,_,_)}
+  ':'      { (Colon        ,_,_)}
   '('      { (ParenLeft    ,_,_)}
   ')'      { (ParenRight   ,_,_)}
   '['      { (BracketLeft  ,_,_)}
@@ -51,14 +57,18 @@ program :: { [AST.Binding Name] }
   :                   {         [] }
   | program rdecl     { $1 ++ [$2] }
   
-rdecl :: { (Name, AST.AST Name) }
+rdecl :: { (AST.Binding Name) }
   : id flhs '=' expr ';' { ($1, case $2 of [] -> $4 ; xs -> AST.Abs xs $4) }
-  
-ldecl :: { (Name, AST.AST Name) }
-  : id flhs '=' expr ';' { ($1, case $2 of [] -> $4 ; xs -> AST.Abs xs $4) }
-  | tlhs '=' expr ';' { (head $1, case tail $1 of [] -> $3 ; xs -> AST.Abs xs $3) }
 
-ldecl_s :: { [AST.Binding Name] }
+rdecl_s :: { [AST.Binding Name] }
+  :               {         [] }
+  | rdecl_s rdecl { $1 ++ [$2] }
+  
+ldecl :: { (AST.Decl Name) }
+  : id flhs '=' expr ';' { AST.Single $1 $ case $2 of [] -> $4 ; xs -> AST.Abs xs $4 }
+  | tlhs    '=' expr ';' { AST.Tuple  $1 $3 }
+
+ldecl_s :: { [AST.Decl Name] }
   :               {         [] }
   | ldecl_s ldecl { $1 ++ [$2] }
 
@@ -67,63 +77,100 @@ flhs :: { [Name] }
   | flhs id   { $1 ++ [$2] }
 
 id_list :: { [Name] }
-  :                 {        [] }
+  : id              {       [$1] }
   | id_list ',' id  { $1 ++ [$3] }
 
 id_s :: { [Name] }
   :             {         [] }
-  | id_list id  { $1 ++ [$2] }
+  | id_s id  { $1 ++ [$2] }
   
 tlhs :: { [Name] }
-  : '(' id ',' id_list ')' { $2 : $4 }
+  : '(' id_list ')' { $2 : $4 }
 
 expr_list :: { [AST.AST Name] }
-  :                     {         [] }
+  : expr                {       [$1] }
   | expr_list ',' expr  { $1 ++ [$3] }
 
-pr_expr :: { AST.AST Name}
+expr_pr :: { AST.AST Name}
   :  lit                                { AST.Lit $1 }
   |  id                                 { AST.Var $1 }
-  | '(' ')'                             { AST.Tuple []}   
+  | '(' ')'                             { AST.MkTuple []}   
   | '(' expr ')'                        { $2 }
-  | '(' expr_list ',' expr ',' expr ')' { AST.Tuple ($2 ++ [$4,$6])}   
-  | '[' expr_list ']'                   { AST.List $2 }  
-  
+  | '(' expr_list ',' expr ',' expr ')' { AST.MkTuple ($2 ++ [$4,$6])}   
+  | '[' ']'                             { AST.Nil  }  
+  | '[' expr_list ']'                   { foldr AST.Cons AST.Nil $2 }  
+
+expr_uop :: { AST.AST Name }
+  : uop expr_pr               { AST.Builtin $1 [$2] }
+  | '#' lit expr              { AST.Select $2 $3 }
+  | expr_pr                   { $1 }
+  | expr_uop expr_pr          { case ($1) of 
+                                  AST.App a b -> AST.App a (b++[$2])
+                                  e           -> AST.App e [$2]
+                              }
+
+expr_mul :: { AST.AST Name }
+  : expr_mul bop_mul expr_uop { AST.Builtin $2 [$1,$3] } 
+  | expr_uop                  { $1 }
+
+expr_add :: { AST.AST Name }
+  : expr_add bop_add expr_mul { AST.Builtin $2 [$1,$3] } 
+  | expr_mul                  { $1 }
+
+expr_cons :: { AST.AST Name }
+  : expr_add ':' expr_cons     { AST.Cons $1 $3 } 
+  | expr_add                   { $1 }
+
+expr_cmp :: { AST.AST Name }
+  : expr_cmp bop_cmp expr_cons { AST.Builtin $2 [$1,$3] } 
+  | expr_cons                  { $1 }
+
+expr_eq :: { AST.AST Name }
+  : expr_eq bop_eq expr_cmp    { AST.Builtin $2 [$1,$3] } 
+  | expr_cmp                   { $1 }
+
+expr_and :: { AST.AST Name }
+  : expr_and '&&' expr_eq      { AST.Builtin AST.BAnd [$1,$3] } 
+  | expr_eq                    { $1 }
+
+expr_or :: { AST.AST Name }
+  : expr_or '||' expr_and      { AST.Builtin AST.BAnd [$1,$3] } 
+  | expr_and                   { $1 }
   
 expr :: { AST.AST Name }
-  : pr_expr                     { $1 }
-  | uop expr                    { AST.Builtin $1 [$2] }
-  | expr bop pr_expr            { AST.Builtin $2 [$1,$3] }
+  : expr_or                     { $1 }
   | if expr then expr else expr { AST.Ifte $2 $4 $6 }
-  | fn id id_s mapsto expr      { AST.Abs       ($2:$3) $5 }
-  | let ldecl ldecl_s in expr   { AST.Let AST.NonRec ($2:$3) $5 }
-  | letrec ldecl ldecl_s in expr{ AST.Let AST.Rec    ($2:$3) $5 }
-  | expr pr_expr                { case ($1) of 
-                                    AST.App a b -> AST.App a (b++[$2])
-                                    e           -> AST.App e [$2]
-                                }
+  | fn id id_s '->' expr        { AST.Abs    ($2:$3) $5 }
+  | let ldecl ldecl_s in expr   { AST.Let    ($2:$3) $5 }
+  | letrec rdecl rdecl_s in expr{ AST.LetRec ($2:$3) $5 }
+  | case expr of 
+      '[' ']'   '->' expr ';' 
+      id ':' id '->' expr       { AST.Case $2 $7 $9 $11 $13 }
+
   
 uop :: { AST.Builtin }
   : '!'     { AST.UNot }
   | neg     { AST.UNeg }
-  | select  { AST.USel $1 }
 
-bop :: { AST.Builtin }
+bop_add :: { AST.Builtin }
   : '+'     { AST.BAdd }
   | '-'     { AST.BSub }
-  | '*'     { AST.BMul }
+
+bop_mul :: { AST.Builtin }  
+  : '*'     { AST.BMul }
   | '/'     { AST.BDiv }
   | '%'     { AST.BMod }
-  | '<'     { AST.BLt  }
+
+bop_cmp :: { AST.Builtin }
+  : '<'     { AST.BLt  }
   | '<='    { AST.BLe  }
-  | '=='    { AST.BEq  }
   | '>='    { AST.BGe  }
   | '>'     { AST.BGt  }
-  
-select :: { Int }
-  : '#' lit   { $2 }
-  
 
+bop_eq :: { AST.Builtin }
+  : '=='    { AST.BEq  }
+  | '/='    { AST.BNe  }
+    
 {
 
 type Name = String
