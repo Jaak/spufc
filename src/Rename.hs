@@ -4,7 +4,7 @@ import AST
 import Ident
 import Unique
 
-import Control.Monad (liftM3, forM, zipWithM)
+import Control.Monad (liftM3, forM, zipWithM, liftM2)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -31,19 +31,24 @@ rn (Abs xs e) = do
       id <- renameVar x
       (ids, e) <- insertEnv x id (loop xs)
       return (id : ids, e)
-rn (Let NonRec bs e) = do
+rn (Let bs e) = do
   (bs', e') <- loop bs
-  return (Let NonRec bs' e')
+  return (Let bs' e')
   where
     loop [] = do
       e' <- rn e
       return ([], e')
-    loop ((x, e) : bs) = do
+    loop (Single x e : bs) = do
       id <- renameVar x 
       ne <- rn e
       (nes, e) <- insertEnv x id (loop bs)
-      return ((id, ne) : nes, e)
-rn (Let Rec bs e) = do
+      return (Single id ne : nes, e)
+    loop (Tuple xs e : bs) = do
+      ids <- mapM renameVar xs
+      ne <- rn e
+      (nes, e) <- foldr (uncurry insertEnv) (loop bs) (zip xs ids)
+      return (Tuple ids ne : nes, e)
+rn (LetRec bs e) = do
   xs <- forM bs $ \(x, e') -> do
     id <- renameVar x 
     return (x, id)
@@ -54,7 +59,7 @@ rn (Let Rec bs e) = do
       return (id, e')
   bs' <- zipWithM step xs bs
   e' <- rn' e
-  return (Let Rec bs' e')
+  return (LetRec bs' e')
 rn (Lit n) = return (Lit n)
 rn (Ifte e t f) = liftM3 Ifte (rn e) (rn t) (rn f)
 rn (App e es) = do
@@ -64,7 +69,17 @@ rn (App e es) = do
 rn (Builtin bi es) = do
   es' <- mapM rn es
   return $ Builtin bi es'
-
+rn (MkTuple es) = MkTuple `fmap` mapM rn es
+rn (Select i e) = Select i `fmap` rn e
+rn Nil = return Nil
+rn (Cons e e') = liftM2 Cons (rn e) (rn e')
+rn (Case cbody cnil xh xt ccons) = do
+  cbody' <- rn cbody
+  cnil' <- rn cnil
+  ih <- renameVar xh
+  it <- renameVar xt
+  ccons' <- insertEnv xh ih (insertEnv xt it (rn ccons))
+  return $ Case cbody' cnil' ih it ccons'
 --
 -- rename monad
 --

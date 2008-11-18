@@ -31,10 +31,19 @@ depAnal (Var x) = Var x
 depAnal (Lit n) = Lit n
 depAnal (Abs xs e) = Abs xs (depAnal e)
 depAnal (App e es) = App (depAnal e) (map depAnal es)
-depAnal (Let Rec bs e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs e
-depAnal (Let NonRec bs e) = Let NonRec (map (second depAnal) bs) (depAnal e)
+depAnal (LetRec bs e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs e
+depAnal (Let bs e) = Let (map f bs) (depAnal e)
+  where
+    f (Single x e) = Single x (depAnal e)
+    f (Tuple xs e) = Tuple xs (depAnal e)
 depAnal (Ifte e t f) = Ifte (depAnal e) (depAnal t) (depAnal f)
 depAnal (Builtin bi es) = Builtin bi (map depAnal es)
+depAnal (MkTuple es) = MkTuple (map depAnal es)
+depAnal (Select i e) = Select i (depAnal e)
+depAnal Nil = Nil
+depAnal (Cons e e') = Cons (depAnal e) (depAnal e')
+depAnal (Case cbody cnil xt xh ccons) =
+  Case (depAnal cbody) (depAnal cnil) xt xh (depAnal ccons)
 
 -- edges are backwards because we want to remove nodes that are
 -- not reachable from |e|.
@@ -66,11 +75,14 @@ rmUnreachable g = delNodes (ns \\ rs) g
 toAST :: [[DANode]] -> AST Ident
 toAST [[Root e _]] = e
 toAST nss = case collectNonrec nss of
-  ([], ns : nss) -> Let Rec (map unNode ns) (toAST nss)
-  (ns, nss) -> Let NonRec (map unNode ns) (toAST nss)
+  ([], ns : nss) -> LetRec (map nodeToBind ns) (toAST nss)
+  (ns, nss) -> Let (map nodeToDecl ns) (toAST nss)
 
-unNode :: DANode -> Binding Ident
-unNode (Node x e _) = (x, e)
+nodeToBind :: DANode -> Binding Ident
+nodeToBind (Node x e _) = (x, e)
+
+nodeToDecl :: DANode -> Decl Ident
+nodeToDecl (Node x e _) = Single x e
 
 collectNonrec :: [[DANode]] -> ([DANode], [[DANode]])
 collectNonrec ([n@(Node x _ s)] : nss)

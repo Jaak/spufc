@@ -52,6 +52,6 @@ main = do
           putStrLn $ "== " ++ file ++ " =="
           bs <- parseFile (includePaths opt) file
           sup <- Unique.newSupply
-          case Rename.rename sup $ AST.Let AST.Rec bs (AST.Var "main") of
+          case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
             Left _ -> putStrLn "Errur"
             Right t -> putStrLn $ prettyAST $ depAnal t
