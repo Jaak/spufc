@@ -20,23 +20,28 @@ data Builtin
   | BLt
   | BGe
   | BGt
-  | USel Int 
+  | BOr
+  | BAnd
   deriving (Eq,Show)
 
 -- f = e
 type Binding a = (a, AST a)
 
-data RecOrNot = Rec | NonRec
-  deriving (Eq, Show)
-
+data RecOrNot = Rec | NonRec deriving (Eq,Show)
+      
 data AST a
   = Var a
   | Lit Literal
-  | Tuple [AST a]
-  | List [AST a]
   | Ifte (AST a) (AST a) (AST a)
   | Abs [a] (AST a)
   | App (AST a) [AST a]
   | Let RecOrNot [Binding a] (AST a)
   | Builtin Builtin [AST a]
+  -- Tuples
+  | MkTuple [AST a]
+  | Select Int (AST a)
+  | LetTuple [([a], AST a)] (AST a)
+  -- Lists
+  | Nil | Cons (AST a) (AST a)
+  | Case (AST a) (AST a) a a (AST a)
   deriving (Eq,Show)
