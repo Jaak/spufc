@@ -85,7 +85,7 @@ id_s :: { [Name] }
   | id_s id  { $1 ++ [$2] }
   
 tlhs :: { [Name] }
-  : '(' id_list ')' { $2 : $4 }
+  : '(' id_list ')' { $2 }
 
 expr_list :: { [AST.AST Name] }
   : expr                {       [$1] }
