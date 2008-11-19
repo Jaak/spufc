@@ -96,7 +96,7 @@ expr_pr :: { AST.AST Name}
   |  id                                 { AST.Var $1 }
   | '(' ')'                             { AST.MkTuple []}   
   | '(' expr ')'                        { $2 }
-  | '(' expr_list ',' expr ',' expr ')' { AST.MkTuple ($2 ++ [$4,$6])}   
+  | '(' expr_list ',' expr ')'          { AST.MkTuple ($2 ++ [$4])}   
   | '[' ']'                             { AST.Nil  }  
   | '[' expr_list ']'                   { foldr AST.Cons AST.Nil $2 }  
 
