@@ -8,6 +8,7 @@ import System.IO
 import qualified Data.ByteString.Lazy.Char8 as ByteString
 import Control.Monad (forM_)
 
+import CodeGen
 import Parser
 import Pretty
 import DepAnal
@@ -49,9 +50,11 @@ main = do
       if printHelp opt
         then putStr $ usageInfo "Help! I'm trapped in the IO monad!" options
         else forM_ files $ \file -> do
-          putStrLn $ "== " ++ file ++ " =="
+          -- putStrLn $ "== " ++ file ++ " =="
           bs <- parseFile (includePaths opt) file
           sup <- Unique.newSupply
           case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
             Left _ -> putStrLn "Errur"
-            Right t -> putStrLn $ prettyAST $ depAnal t
+            Right t -> do
+              let t' = depAnal t
+              mapM_ print $ codeGen sup t'

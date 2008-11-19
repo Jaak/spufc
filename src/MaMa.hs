@@ -30,12 +30,15 @@ data MaMa
   | ALLOC Int
   | REWRITE Int
   | MKVEC Int
+  | GETVEC Int
+  | GET Int
   | LABEL Label
   | MKCLOS Label
   | MKFUNVAL Label
   | MARK Label
   | JUMPZ Label
   | JUMP Label
+  | COMMENT String
 
 instance Show MaMa where showsPrec _ = showsMama
 instance Show Label where showsPrec _ = showsLabel
@@ -68,9 +71,12 @@ showsMama (SLIDE k)    = showString "slide"    . space . shows k
 showsMama (ALLOC k)    = showString "alloc"    . space . shows k
 showsMama (REWRITE k)  = showString "rewrite"  . space . shows k 
 showsMama (MKVEC k)    = showString "mkvec"    . space . shows k
+showsMama (GETVEC k)   = showString "getvec"   . space . shows k
+showsMama (GET k)      = showString "get"      . space . shows k
 showsMama (LABEL l)    = shows l               . showChar ':'
 showsMama (MKCLOS l)   = showString "mkclos"   . space . shows l
 showsMama (MKFUNVAL l) = showString "mkfunval" . space . shows l
 showsMama (MARK l)     = showString "mark"     . space . shows l
 showsMama (JUMPZ l)    = showString "jumpz"    . space . shows l
 showsMama (JUMP l)     = showString "jump"     . space . shows l
+showsMama (COMMENT str)= showString "/* " . showString str . showString " */"

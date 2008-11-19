@@ -99,18 +99,53 @@ codev (App e es) = do
   emits [
     APPLY,
     LABEL a]
-codev (Let NonRec bs e) = do
+codev (Let bs e) = do
   sd <- askSd
   env <- askEnv
   let
-    n = length bs
-    step env ((y, e'), i) = do
-      withSd (sd + i) $ withEnv env $ codec e'
-      return $ Env.insert y (Env.Local (sd + i + 1)) env
-  env' <- foldM step env (zip bs [0..])
-  withSd (sd + n) $ withEnv env' $ codev e
-  emit (SLIDE n)
-codev (Let Rec bs e) = do
+--    n = length bs
+--    step env (Single y e', i) = do
+--      withSd (sd + i) $ withEnv env $ codec e'
+--      return $ Env.insert y (Env.Local (sd + i + 1)) env
+--  env' <- foldM step env (zip bs [0..])
+--  withSd (sd + n) $ withEnv env' $ codev e
+--  emit (SLIDE n)
+--    loop j [] = do
+--      codev e
+--      emit (SLIDE (j-1))
+--    loop j (b : bs) = do
+--      sd <- askSd
+--      env <- askEnv
+--      case b of
+--        Single x e' -> do
+--          codec e'
+--          withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + j)) env) $ loop (j + 1) bs
+--        Tuple xs e' -> do
+--          let k = length xs
+--              insert' = uncurry Env.insert
+--          codev e'
+--          emit (GETVEC k)
+--          withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop (j + k) bs
+--  loop 1 bs
+    loop [] = codev e
+    loop (Single x e' : bs) = do
+      sd <- askSd
+      env <- askEnv
+      codec e'
+      withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + 1)) env) $ loop bs
+      emit (SLIDE 1)
+    loop (Tuple xs e' : bs) = do
+      sd <- askSd
+      env <- askEnv
+      let k = length xs
+          insert' = uncurry Env.insert
+      codev e'
+      emit (GETVEC k)
+      withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop bs
+      emit (SLIDE k)
+  loop bs
+
+codev (LetRec bs e) = do
   sd <- askSd
   env <- askEnv
   let
@@ -125,6 +160,17 @@ codev (Let Rec bs e) = do
       emit (REWRITE i)
     codev e
   emit (SLIDE n)
+codev (MkTuple es) = do
+  emit (COMMENT "<tuple>")
+  let k = length es
+  sd <- askSd
+  zipWithM_ (\i -> withSd (sd + i) . codec) [0..] es
+  emit (MKVEC k)
+  emit (COMMENT "</tuple>")
+codev (Select j e) = do
+  codev e
+  emit (GET j)
+  emit EVAL
 
 -- closure stuff
 codec e = do

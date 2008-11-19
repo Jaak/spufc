@@ -28,6 +28,7 @@ fvs (LetRec bs e) = S.unions (fvs e : ss) \\\ xs'
     (xs', ss) = unzip [(x, fvs e') | (x, e') <- bs]
 fvs (Builtin _ es) = S.unions $ map fvs es
 fvs (MkTuple es) = S.unions $ map fvs es
+fvs (Select _ e) = fvs e
 fvs Nil = S.empty
 fvs (Cons e e') = S.union (fvs e) (fvs e')
 fvs (Case body cnil xh xt ccons) = S.unions [
