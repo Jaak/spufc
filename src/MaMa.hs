@@ -17,6 +17,15 @@ data MaMa
   | MUL
   | DIV
   | LEQ
+  | NEG
+  | NOT
+  | MOD
+  | NEQ
+  | LE
+  | GEQ
+  | GR
+  | OR
+  | AND
   | EQUAL
   | APPLY
   | UPDATE
@@ -62,6 +71,15 @@ showsMama (EQUAL)      = showString "eq"
 showsMama (APPLY)      = showString "apply"
 showsMama (UPDATE)     = showString "update"
 showsMama (HALT)       = showString "halt"
+showsMama (NEG)        = showString "neg" 
+showsMama (NOT)        = showString "not" 
+showsMama (MOD)        = showString "mod" 
+showsMama (NEQ)        = showString "neq" 
+showsMama (LE)         = showString "le" 
+showsMama (GEQ)        = showString "geq" 
+showsMama (GR)         = showString "gr" 
+showsMama (OR)         = showString "or" 
+showsMama (AND)        = showString "and" 
 showsMama (LOADC k)    = showString "loadc"    . space . shows k
 showsMama (PUSHLOC k)  = showString "pushloc"  . space . shows k
 showsMama (PUSHGLOB k) = showString "pushglob" . space . shows k
