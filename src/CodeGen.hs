@@ -196,6 +196,10 @@ codev (Case cbody cnil xh xt ccons) = do
   emit (LABEL b)
 
 -- closure stuff
+codec e@(Abs _ _) = codev e
+
+codec e@(Lit _) = codev e
+
 codec e = do
   sd <- askSd
   env <- askEnv
