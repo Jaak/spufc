@@ -54,7 +54,7 @@ main = do
           bs <- parseFile (includePaths opt) file
           sup <- Unique.newSupply
           case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
-            Left _ -> putStrLn "Errur"
+            Left err -> putStr $ "Errur: " ++ show err
             Right t -> do
               let t' = depAnal t
               mapM_ print $ codeGen sup t'
