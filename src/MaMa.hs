@@ -27,6 +27,8 @@ data MaMa
   | OR
   | AND
   | EQUAL
+  | NIL
+  | CONS
   | APPLY
   | UPDATE
   | HALT
@@ -47,6 +49,7 @@ data MaMa
   | MARK Label
   | JUMPZ Label
   | JUMP Label
+  | TLIST Label
   | COMMENT String
 
 instance Show MaMa where showsPrec _ = showsMama
@@ -80,6 +83,8 @@ showsMama (GEQ)        = showString "geq"
 showsMama (GR)         = showString "gr" 
 showsMama (OR)         = showString "or" 
 showsMama (AND)        = showString "and" 
+showsMama (NIL)        = showString "nil" 
+showsMama (CONS)       = showString "cons" 
 showsMama (LOADC k)    = showString "loadc"    . space . shows k
 showsMama (PUSHLOC k)  = showString "pushloc"  . space . shows k
 showsMama (PUSHGLOB k) = showString "pushglob" . space . shows k
@@ -97,4 +102,5 @@ showsMama (MKFUNVAL l) = showString "mkfunval" . space . shows l
 showsMama (MARK l)     = showString "mark"     . space . shows l
 showsMama (JUMPZ l)    = showString "jumpz"    . space . shows l
 showsMama (JUMP l)     = showString "jump"     . space . shows l
+showsMama (TLIST l)    = showString "tlist"    . space . shows l
 showsMama (COMMENT str)= showString "/* " . showString str . showString " */"

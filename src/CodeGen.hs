@@ -172,6 +172,28 @@ codev (Select j e) = do
   codev e
   emit (GET j)
   emit EVAL
+codev Nil = emit NIL
+codev (Cons e e') = do
+  sd <- askSd
+  codec e
+  withSd (sd + 1) $ codec e'
+  emit CONS
+codev (Case cbody cnil xh xt ccons) = do
+  a <- newLabel
+  b <- newLabel
+  sd <- askSd
+  env <- askEnv
+  codev cbody
+  emit (TLIST a)
+  codev cnil
+  emit (JUMP b)
+  emit (LABEL a)
+  let
+    env' = Env.insert xh (Env.Local (sd + 1)) $
+           Env.insert xt (Env.Local (sd + 2)) $ env
+  withSd (sd + 2) $ withEnv env' $ codev ccons
+  emit (SLIDE 2)
+  emit (LABEL b)
 
 -- closure stuff
 codec e = do
