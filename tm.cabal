@@ -23,5 +23,5 @@ Executable tm
                           PufTokens,
                           Parser,
                           Rename,
-                          Unique
-
+                          Unique,
+                          Eval
