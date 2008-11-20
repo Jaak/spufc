@@ -1,0 +1,9 @@
+
+foldr f e xs =
+  case xs of
+    [] -> e;
+    x : xs -> f x (foldr f e xs);
+
+product = foldr (fn x y -> x * y) 1;
+
+main = product [1, 2, 3, 4, 5];

@@ -1,0 +1,4 @@
+undefined = undefined;
+main = case [1, 2] of
+  [] -> undefined;
+  x : xs -> x;

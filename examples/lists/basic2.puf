@@ -1,0 +1,8 @@
+sum xs =
+  case xs of
+    [] -> 0;
+    x : xs -> x + sum xs;
+
+// 10
+main =
+  sum [1,2,3,4];
