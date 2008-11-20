@@ -13,13 +13,23 @@ import Fvs (fvList)
 -- each builtin must correspond to some MaMa instruction
 -- well we could generalise this with:
 --  builtin :: Builtin -> [MaMa]
-builtin :: Builtin -> MaMa
-builtin BAdd = ADD
-builtin BMul = MUL
-builtin BSub = SUB
-builtin BLe  = LEQ
-builtin BEq  = EQUAL
-builtin _ = undefined
+builtin :: Builtin -> Cg ()
+builtin UNeg = emit NEG
+builtin UNot = emit NOT
+builtin BAdd = emit ADD
+builtin BSub = emit SUB
+builtin BMul = emit MUL
+builtin BDiv = emit DIV
+builtin BMod = emit MOD
+builtin BEq  = emit EQUAL
+builtin BNe  = emit NEQ
+builtin BLe  = emit LEQ
+builtin BLt  = emit LE
+builtin BGe  = emit GEQ
+builtin BGt  = emit GR
+builtin BOr  = emit OR
+builtin BAnd = emit AND
+builtin _    = fail "oops, we hit a builtin that is not known!"
 
 codeGen :: Supply -> AST Ident -> [MaMa]
 codeGen s e = runCg s $ do
@@ -33,7 +43,7 @@ codeb (Lit x) = emit (LOADC x)
 codeb (Builtin bi es) = do
   sd <- askSd
   zipWithM_  (\sd' -> withSd sd' . codeb) [sd ..] es
-  emit (builtin bi)
+  builtin bi
 codeb (Ifte e t f) = do
   a <- newLabel
   b <- newLabel
@@ -52,7 +62,7 @@ codev (Lit x) = emits [LOADC x, MKBASIC]
 codev (Builtin bi es) = do
   sd <- askSd
   zipWithM_  (\sd' -> withSd sd' . codeb) [sd ..] es
-  emit (builtin bi)
+  builtin bi
   emit MKBASIC
 codev (Ifte e t f) = do
   a <- newLabel
@@ -100,50 +110,41 @@ codev (App e es) = do
     APPLY,
     LABEL a]
 codev (Let bs e) = do
-  sd <- askSd
-  env <- askEnv
   let
---    n = length bs
---    step env (Single y e', i) = do
---      withSd (sd + i) $ withEnv env $ codec e'
---      return $ Env.insert y (Env.Local (sd + i + 1)) env
---  env' <- foldM step env (zip bs [0..])
---  withSd (sd + n) $ withEnv env' $ codev e
---  emit (SLIDE n)
---    loop j [] = do
---      codev e
---      emit (SLIDE (j-1))
---    loop j (b : bs) = do
+    loop j [] = do
+      codev e
+      emit (SLIDE (j-1))
+    loop j (b : bs) = do
+      sd <- askSd
+      env <- askEnv
+      case b of
+        Single x e' -> do
+          codec e'
+          withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + 1)) env) $ loop (j + 1) bs
+        Tuple xs e' -> do
+          let k = length xs
+              insert' = uncurry Env.insert
+          codev e'
+          emit (GETVEC k)
+          withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop (j + k) bs
+  loop 1 bs
+--    loop [] = codev e
+--    loop (Single x e' : bs) = do
 --      sd <- askSd
 --      env <- askEnv
---      case b of
---        Single x e' -> do
---          codec e'
---          withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + j)) env) $ loop (j + 1) bs
---        Tuple xs e' -> do
---          let k = length xs
---              insert' = uncurry Env.insert
---          codev e'
---          emit (GETVEC k)
---          withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop (j + k) bs
---  loop 1 bs
-    loop [] = codev e
-    loop (Single x e' : bs) = do
-      sd <- askSd
-      env <- askEnv
-      codec e'
-      withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + 1)) env) $ loop bs
-      emit (SLIDE 1)
-    loop (Tuple xs e' : bs) = do
-      sd <- askSd
-      env <- askEnv
-      let k = length xs
-          insert' = uncurry Env.insert
-      codev e'
-      emit (GETVEC k)
-      withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop bs
-      emit (SLIDE k)
-  loop bs
+--      codec e'
+--      withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + 1)) env) $ loop bs
+--      emit (SLIDE 1)
+--    loop (Tuple xs e' : bs) = do
+--      sd <- askSd
+--      env <- askEnv
+--      let k = length xs
+--          insert' = uncurry Env.insert
+--      codev e'
+--      emit (GETVEC k)
+--      withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop bs
+--      emit (SLIDE k)
+--  loop bs
 
 codev (LetRec bs e) = do
   sd <- askSd
