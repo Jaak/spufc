@@ -101,8 +101,8 @@ expr_pr :: { AST.AST Name}
   | '[' expr_list ']'                   { foldr AST.Cons AST.Nil $2 }  
 
 expr_uop :: { AST.AST Name }
-  : uop expr_pr               { AST.Builtin $1 [$2] }
-  | '#' lit expr              { AST.Select $2 $3 }
+  : uop expr_uop               { AST.Builtin $1 [$2] }
+  | '#' lit expr_uop          { AST.Select $2 $3 }
   | expr_pr                   { $1 }
   | expr_uop expr_pr          { case ($1) of 
                                   AST.App a b -> AST.App a (b++[$2])
