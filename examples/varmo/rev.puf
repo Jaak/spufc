@@ -1,0 +1,7 @@
+#include prelude.puf
+
+rev x y = case x of
+  [] -> y;
+  h : t -> rev t (h : y);
+
+main = head (rev [1,2,3] []);
