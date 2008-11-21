@@ -1,0 +1,61 @@
+undefined = undefined;
+
+head xs = case xs of
+  [] -> undefined;
+  x : xs -> x;
+
+tail xs = case xs of
+  [] -> undefined;
+  x : xs -> xs;
+
+foldr f e xs = letrec
+    loop xs = case xs of
+      [] -> e;
+      x : xs -> f x (loop xs);
+  in loop xs;
+
+map f xs = letrec
+    loop xs = case xs of
+      [] -> [];
+      x : xs -> f x : loop xs;
+  in loop xs;
+
+filter p xs = letrec
+    loop xs = case xs of
+      [] -> [];
+      x : xs -> if p x
+        then x : loop xs
+        else loop xs;
+  in loop xs;
+
+sum xs = letrec
+    loop acc xs = case xs of
+      [] -> acc;
+      x : xs -> loop (x + acc) xs;
+  in loop 0 xs;
+
+null xs = case xs of
+  [] -> 1;
+  x : xs -> 0;
+
+curry f x y = f (x, y);
+
+uncurry f p = let
+    (x, y) = p;
+  in f x y;
+
+id x = x;
+
+const x y = x;
+
+flip f x y = f y x;
+
+length xs = letrec
+    loop acc xs = case xs of
+      [] -> acc;
+      x : xs -> loop (acc + 1) xs;
+  in loop 0 xs;
+
+even n = n % 2 == 0;
+
+odd n = n % 2 == 1;
