@@ -30,7 +30,7 @@ depAnal :: AST Ident -> AST Ident
 depAnal (Var x) = Var x
 depAnal (Lit n) = Lit n
 depAnal (Abs xs e) = Abs xs (depAnal e)
-depAnal (App e es) = App (depAnal e) (map depAnal es)
+depAnal (App t e es) = App t (depAnal e) (map depAnal es)
 depAnal (LetRec bs e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs e
 depAnal (Let bs e) = Let (map f bs) (depAnal e)
   where
