@@ -18,8 +18,10 @@ prettyAST' (Ifte e t f) =
      text "else" <+> prettyAST' f))
 prettyAST' (Abs ns e) =
   text "fn" <+> hsep (map (text . show) ns) <+> text "->" <+> prettyAST' e
-prettyAST' (App e es) =
+prettyAST' (App RegularCall e es) =
   prettyApp e <+> hsep (map prettyPrim es)
+prettyAST' (App (LastCall k) e es) =
+  braces (int k <> char '|' <+> prettyApp e <+> hsep (map prettyPrim es))
 prettyAST' (LetRec bs e) =
   text "letrec" $$
   nest 2 (vcat $ map prettyBind bs) $$
@@ -39,8 +41,7 @@ prettyAST' (Case cbody cnil xh xt ccons) =
   (text "case" <+> prettyAST' cbody <+> text "of") $$
     nest 2 (pNil $$ pCons)
   where
-    pNil = 
-      text "[]" <+> text "->" <+> prettyAST' cnil <> semi
+    pNil = text "[]" <+> text "->" <+> prettyAST' cnil
     pCons =
       text (show xh) <+> colon <+> text (show xt) <+> text "->"
       <+> prettyAST' ccons
@@ -69,7 +70,7 @@ prettyPrim e@Nil = prettyAST' e
 prettyPrim e@(MkTuple _) = prettyAST' e
 prettyPrim e = parens (prettyAST' e)
 
-prettyApp e@(App _ _) = prettyAST' e
+prettyApp e@(App _ _ _) = prettyAST' e
 prettyApp e = prettyPrim e
 
 prettyBind (b, e) =
