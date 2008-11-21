@@ -105,8 +105,8 @@ expr_uop :: { AST.AST Name }
   | '#' lit expr_uop          { AST.Select $2 $3 }
   | expr_pr                   { $1 }
   | expr_uop expr_pr          { case ($1) of 
-                                  AST.App a b -> AST.App a (b++[$2])
-                                  e           -> AST.App e [$2]
+                                  AST.App _ a b -> AST.App AST.RegularCall a (b++[$2])
+                                  e             -> AST.App AST.RegularCall e [$2]
                               }
 
 expr_mul :: { AST.AST Name }
