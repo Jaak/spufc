@@ -1,5 +1,7 @@
 module Eval (Value, EvalError, eval) where
 
+import Control.Arrow (first)
+
 import Ident
 import AST
 import qualified Data.Map as M
@@ -24,47 +26,49 @@ instance Show Value where
 
 type Env = M.Map Ident Value
 
-eval :: AST Ident -> Either EvalError Value
-eval e = unEval (eval' e) M.empty
+eval :: AST Ident -> (String, Either EvalError Value)
+eval e = case unEval (eval' e) M.empty of
+  (w, x) -> (w [], x)
 
 eval' :: AST Ident -> Eval Value
-eval' (Var i) = lookupValue i
-eval' (Lit x) = return $ L x
+eval' (Var i) = trace ("var: " ++ show i) >> lookupValue i
+eval' (Lit x) = trace ("lit: " ++ show x) >> (return $ L x)
 eval' (Ifte e t f) = do
   (L b) <- eval' e
   case b of
     1 -> eval' t
     0 -> eval' f
+-- i think the bug is here...
 eval' (Abs xs e) = do
   let
     loop [] = eval' e
-    loop (x : xs) = return $ F $ \v -> updateEnv x v (loop xs)
+    loop (y : ys) = do
+      trace (show y)
+      return $ F $ \v -> updateEnv y v (loop ys)
+  trace "abs:"
   loop xs
 -- e x y z = ((e x) y) z
-eval' (App e es) = do
+eval' (App _ e es) = do
   let
     loop x [] = return x
     loop (F f) (e' : e's) = do
       v <- eval' e'
       x' <- f v
       loop x' e's
+  trace "app:"
   x <- eval' e
+  trace ":app"
   loop x es
 eval' (Let bs e) = do
   let
     loop [] = eval' e
-    loop (Single x e : bs) = do
-      v <- eval' e
+    loop (Single x e' : bs) = do
+      v <- eval' e'
       updateEnv x v (loop bs)
-    loop (Tuple xs e : bs) = do
-      T vs <- eval' e
+    loop (Tuple xs e' : bs) = do
+      T vs <- eval' e'
       updateMany (zip xs vs) (loop bs)
   loop bs
--- let
---      (x, ..) = (e', ..)
--- in e
--- ==
--- e (\(x, ..) -> (e', ..))
 eval' (LetRec bs e) = do
   let
     (xs, es) = unzip bs
@@ -100,9 +104,9 @@ evbi UNot [L 1]       = return $ L $ 0
 evbi BAdd [L v, L v'] = return $ L $ v + v'
 evbi BSub [L v, L v'] = return $ L $ v - v'
 evbi BMul [L v, L v'] = return $ L $ v * v'
-evbi BDiv [L v, L 0]  = fail "Division by zero"
+evbi BDiv [L v, L 0]  = evalThrow DivisionByZero
 evbi BDiv [L v, L v'] = return $ L $ v `div` v'
-evbi BMod [L v, L 0]  = fail "Division by zero"
+evbi BMod [L v, L 0]  = evalThrow DivisionByZero
 evbi BMod [L v, L v'] = return $ L $ v `mod` v'
 evbi BEq  [L v, L v'] = return $ L $ fromEnum $ v == v'
 evbi BNe  [L v, L v'] = return $ L $ fromEnum $ v /= v'
@@ -118,7 +122,7 @@ evbi _ _ = fail "bad builtin"
 --
 
 askEnv :: Eval Env
-askEnv = Eval $ \e -> Right e
+askEnv = Eval $ \e -> (id, Right e)
 
 updateEnv :: Ident -> Value -> Eval a -> Eval a
 updateEnv i v (Eval f) = Eval $ \e -> f (M.insert i v e)
@@ -127,13 +131,21 @@ updateMany :: [(Ident, Value)] -> Eval a -> Eval a
 updateMany ivs (Eval f) = Eval $ \e -> f (foldr (uncurry M.insert) e ivs)
 
 lookupValue :: Ident -> Eval Value
-lookupValue i =  Eval $ \e -> case M.lookup i e of
-  Nothing -> Left $ "identifier " ++ show i ++ " not bound: " ++ show e
-  Just x -> Right x
+lookupValue i = do
+  env <- askEnv
+  case M.lookup i env of
+    Nothing -> evalThrow (UnboundIdentifier i)
+    Just x -> return x
 
-type EvalError = String
+data EvalError
+  = UnboundIdentifier Ident
+  | DivisionByZero
+  | OtherError String
+  deriving Show
 
-newtype Eval a = Eval { unEval :: Env -> Either EvalError a }
+newtype Eval a = Eval {
+    unEval :: Env -> (String -> String, Either EvalError a)
+  }
 
 instance Monad Eval where
   return = returnEval
@@ -147,30 +159,36 @@ instance MonadFix Eval where
 instance Functor Eval where
   fmap = mapEval
 
+trace :: String -> Eval ()
+trace str' = Eval $ \_ -> (\str -> str++('\n':str'), Right ())
+
+evalThrow :: EvalError -> Eval a
+evalThrow err = Eval $ \_ -> (id, Left err)
+
 mapEval :: (a -> b) -> Eval a -> Eval b
 mapEval f (Eval m) = Eval (\e -> case m e of
-  Left err -> Left err
-  Right x -> Right (f x))
+  (w, Left err) -> (w, Left err)
+  (w, Right x) -> (w, Right (f x)))
 
 returnEval :: a -> Eval a
-returnEval x = Eval $ \_ -> Right x
+returnEval x = Eval $ \_ -> (id, Right x)
 
 bindEval :: Eval a -> (a -> Eval b) -> Eval b
 bindEval (Eval f) m = Eval $ \e -> case f e of
-  Left err -> Left err
-  Right x -> unEval (m x) e
+  (w, Left err) -> (w, Left err)
+  (w, Right x) -> first (. w) $ unEval (m x) e
 
 failEval :: String -> Eval a
-failEval str = Eval $ \_ -> Left str
+failEval str = Eval $ \_ -> (id, Left (OtherError str))
 
 thenEval :: Eval a -> Eval b -> Eval b
 thenEval (Eval f) (Eval g) = Eval $ \e -> case f e of
-  Left err -> Left err
-  Right _ -> g e
+  (w, Left err) -> (w, Left err)
+  (w, Right _) -> first (. w) $ g e
 
 unRight (Right x) = x
 
 fixEval :: (a -> Eval a) -> Eval a
 fixEval f = Eval $ \e -> let
-    x = unEval (f (unRight x)) e
+    x = unEval (f (unRight (snd x))) e
   in x
