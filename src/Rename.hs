@@ -62,10 +62,10 @@ rn (LetRec bs e) = do
   return (LetRec bs' e')
 rn (Lit n) = return (Lit n)
 rn (Ifte e t f) = liftM3 Ifte (rn e) (rn t) (rn f)
-rn (App e es) = do
+rn (App t e es) = do
   e' <- rn e
   e's <- mapM rn es
-  return $ App e' e's
+  return $ App t e' e's
 rn (Builtin bi es) = do
   es' <- mapM rn es
   return $ Builtin bi es'
