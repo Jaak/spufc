@@ -1,5 +1,5 @@
 module AST
-  (Literal, AST(..), Builtin(..), Decl(..), Binding)
+  (Literal, AST(..), Builtin(..), Decl(..), Binding, AppType(..))
   where
 
 type Literal = Int
@@ -31,12 +31,17 @@ data Decl a
   | Single a (AST a)
   deriving (Eq,Show)
 
+data AppType
+  = RegularCall
+  | LastCall Int
+  deriving (Eq, Show)
+
 data AST a
   = Var a
   | Lit Literal
   | Ifte (AST a) (AST a) (AST a)
   | Abs [a] (AST a)
-  | App (AST a) [AST a]
+  | App AppType (AST a) [AST a]
   | Let [Decl a] (AST a)
   | LetRec [Binding a] (AST a)
   | Builtin Builtin [AST a]
