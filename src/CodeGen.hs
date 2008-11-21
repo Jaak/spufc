@@ -99,7 +99,7 @@ codev (Abs xs e) = do
   emits [
     RETURN k,
     LABEL b]
-codev (App e es) = do
+codev (App RegularCall e es) = do
   a <- newLabel
   sd <- askSd
   let m = length es
