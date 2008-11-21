@@ -16,6 +16,7 @@ import qualified Eval
 import qualified AST
 import qualified Rename
 import qualified Unique
+import qualified LastCall
 
 data Options = Options {
     printHelp :: Bool,
@@ -73,10 +74,12 @@ main = do
           case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
             Left err -> putStr $ "Errur: " ++ show err
             Right t -> do
-              let t' = depAnal t
+              let t' = LastCall.detect (depAnal t)
               when (debug opt) $ do
                 putStrLn "\n== Abstract syntax tree =="
                 putStrLn $ prettyAST $ t'
                 putStrLn "== / ==\n"
               when (mama opt) $ mapM_ print $ codeGen sup t'
-              when (eval opt) $ print $ Eval.eval $ t'
+              when (eval opt) $ do
+                case Eval.eval $ t' of
+                  (w, res) -> putStrLn w >> print res
