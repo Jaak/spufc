@@ -109,6 +109,14 @@ codev (App RegularCall e es) = do
   emits [
     APPLY,
     LABEL a]
+codev (App (LastCall k) e es) = do
+  sd <- askSd
+  let m = length es
+      step e' i = withSd (sd + i) $ codec e'
+  zipWithM_ step (reverse es) [0..]
+  withSd (sd + m) $ codev e
+  emit $ MOVE (sd + k) (m + 1)
+  emit APPLY
 codev (Let bs e) = do
   let
     loop j [] = do
@@ -197,8 +205,10 @@ codev (Case cbody cnil xh xt ccons) = do
 
 -- closure stuff
 codec e@(Abs _ _) = codev e
-
 codec e@(Lit _) = codev e
+codec e@(MkTuple _) = codev e
+codec e@Nil = codev e
+codec e@(Cons _ _) = codev e
 
 codec e = do
   sd <- askSd
