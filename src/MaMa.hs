@@ -43,6 +43,7 @@ data MaMa
   | MKVEC Int
   | GETVEC Int
   | GET Int
+  | MOVE Int Int
   | LABEL Label
   | MKCLOS Label
   | MKFUNVAL Label
@@ -96,6 +97,7 @@ showsMama (REWRITE k)  = showString "rewrite"  . space . shows k
 showsMama (MKVEC k)    = showString "mkvec"    . space . shows k
 showsMama (GETVEC k)   = showString "getvec"   . space . shows k
 showsMama (GET k)      = showString "get"      . space . shows k
+showsMama (MOVE n m)   = showString "move"     . space . shows n . space . shows m
 showsMama (LABEL l)    = shows l               . showChar ':'
 showsMama (MKCLOS l)   = showString "mkclos"   . space . shows l
 showsMama (MKFUNVAL l) = showString "mkfunval" . space . shows l
