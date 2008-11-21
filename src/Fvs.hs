@@ -17,7 +17,7 @@ fvs (Var x) = S.singleton x
 fvs (Lit _) = S.empty
 fvs (Ifte e t f) = S.unions $ map fvs [e, t, f]
 fvs (Abs xs e) = fvs e \\\ xs
-fvs (App e es) = S.unions $ map fvs (e : es)
+fvs (App _ e es) = S.unions $ map fvs (e : es)
 fvs (Let bs e) = loop bs
   where
     loop [] = fvs e
