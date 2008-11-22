@@ -1,4 +1,4 @@
-module Rename (rename, RenameError) where
+module Rename (rename, RenameError(..)) where
 
 import AST
 import Ident
@@ -8,8 +8,10 @@ import Control.Monad (liftM3, forM, zipWithM, liftM2)
 import Data.Map (Map)
 import qualified Data.Map as M
 
-type RenameError
-  = String
+data RenameError
+  = FreeVariable String
+  | OtherRenameError String
+  deriving Show
 
 rename :: Supply -> AST String -> Either RenameError (AST Ident)
 rename s e = runRn s (rn e)
@@ -18,7 +20,7 @@ rn :: AST String -> RnMonad (AST Ident)
 rn (Var x) = do
   env <- askEnv
   case M.lookup x env of
-    Nothing -> fail $ "Free variable " ++ show x
+    Nothing -> throwRn (FreeVariable x)
     Just id -> return (Var id)
 rn (Abs xs e) = do
   (xs', e') <- loop xs
@@ -103,6 +105,9 @@ insertEnv x id (Rn f) = Rn $ \e -> f (M.insert x id e)
 runRn :: Supply -> RnMonad a -> Either RenameError a
 runRn s (Rn f) = fst `fmap` f M.empty s
 
+throwRn :: RenameError -> RnMonad a
+throwRn err = Rn $ \_ _ -> Left err
+
 instance Functor RnMonad where
   fmap = mapRn
 
@@ -113,7 +118,7 @@ instance Monad RnMonad where
   fail = failRn
 
 failRn :: String -> RnMonad a
-failRn err = Rn $ \_ _ -> Left err
+failRn err = throwRn (OtherRenameError err)
 
 mapRn f (Rn fs) = Rn $ \e st -> case fs e st of
   Left e -> Left e
