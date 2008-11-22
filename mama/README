@@ -1,0 +1,25 @@
+Experimental MaMa interpreter
+
+building
+========
+
+./make.sh
+
+Requires a compiler for D version 1 
+See: http://www.digitalmars.com/d/1.0/
+
+Tested on gdc (mac), but probably works with dmd v1 if you change 'make.sh'.
+
+usage
+=====
+
+./mama <file>.puf 
+
+Executes a program and prints final state of the VM.
+
+todo
+====
+
+* add test codes
+* add verbosity flags
+

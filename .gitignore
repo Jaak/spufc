@@ -5,3 +5,7 @@ src/PufParser.hs
 src/Main
 Setup*
 dest/*
+Vam/*
+mama/build
+mama/mama
+mama/mama.xcodeproj
