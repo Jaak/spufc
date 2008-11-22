@@ -4,6 +4,13 @@ import std.stdio  : writefln, writef;
 import std.string : iswhite, split, tolower, atoi, format;
 import std.file   : read;
 
+
+// default to Stats version
+version(NoStats) {} else{
+  version = Stats;
+}
+
+// instruction code 
 enum Instr {
     Mkbasic  , // no args
     Getbasic , 
@@ -48,6 +55,7 @@ enum Instr {
     Move     , // arg1, arg2
 }
 
+// instruction type
 struct instr{
   Instr code;
   int   arg1;
@@ -109,82 +117,116 @@ string show_instr(ref instr i){
   }
 }
 
-void exec_instr(ref instr i, VM vm){
+void exec_instr(ref instr i, VM vm) in {
+  assert(vm);
+  assert(i.code >= Instr.min);
+  assert(i.code <= Instr.max);
+} body {
   switch(i.code){
-    case Instr.Mkbasic  : mkbasic(vm)           ; return;  
-    case Instr.Getbasic : getbasic(vm)          ; return;  
-    case Instr.Eval     : eval(vm)              ; return;  
-    case Instr.Add      : add(vm)               ; return;  
-    case Instr.Sub      : sub(vm)               ; return;  
-    case Instr.Mul      : mul(vm)               ; return;  
-    case Instr.Div      : div(vm)               ; return;  
-    case Instr.Leq      : leq(vm)               ; return;  
-    case Instr.Eq       : eq(vm)                ; return;  
-    case Instr.Apply    : apply(vm)             ; return;  
-    case Instr.Update   : update(vm)            ; return;  
-    case Instr.Halt     : halt(vm)              ; return;  
-    case Instr.Neg      : neg(vm)               ; return;  
-    case Instr.Not      : not(vm)               ; return;  
-    case Instr.Mod      : mod(vm)               ; return;  
-    case Instr.Neq      : neq(vm)               ; return;  
-    case Instr.Le       : le(vm)                ; return;  
-    case Instr.Geq      : geq(vm)               ; return;  
-    case Instr.Gr       : gr(vm)                ; return;  
-    case Instr.Or       : or(vm)                ; return;   
-    case Instr.And      : and(vm)               ; return;  
-    case Instr.Nil      : nil(vm)               ; return;  
-    case Instr.Cons     : cons(vm)              ; return;       
-    case Instr.Loadc    : loadc(i.arg1,vm)      ; return;  
-    case Instr.Pushloc  : pushloc(i.arg1,vm)    ; return;  
-    case Instr.Pushglob : pushglob(i.arg1,vm)   ; return;  
-    case Instr.Targ     : targ(i.arg1,vm)       ; return;  
-    case Instr.Return   : ret(i.arg1,vm)        ; return;  
-    case Instr.Slide    : slide(i.arg1,vm)      ; return;  
-    case Instr.Alloc    : alloc(i.arg1,vm)      ; return;  
-    case Instr.Rewrite  : rewrite(i.arg1,vm)    ; return;  
-    case Instr.Mkvec    : mkvec(i.arg1,vm)      ; return;  
-    case Instr.Getvec   : getvec(i.arg1,vm)     ; return;  
-    case Instr.Get      : get(i.arg1,vm)        ; return;  
-    case Instr.Mkclos   : mkclos(i.arg1,vm)     ; return;  
-    case Instr.Mkfunval : mkfunval(i.arg1,vm)   ; return;  
-    case Instr.Mark     : mark(i.arg1,vm)       ; return;  
-    case Instr.Jumpz    : jumpz(i.arg1,vm)      ; return;  
-    case Instr.Jump     : jump(i.arg1,vm)       ; return;  
-    case Instr.Tlist    : tlist(i.arg1,vm)      ; return;  
-    case Instr.Move     : move(i.arg1,i.arg2,vm); return;  
+    case Instr.Mkbasic  : mkbasic(vm)           ; version(Stats) ++vm.other ; return;  
+    case Instr.Getbasic : getbasic(vm)          ; version(Stats) ++vm.other ; return;  
+    case Instr.Eval     : eval(vm)              ; version(Stats) ++vm.other ; return;  
+    case Instr.Add      : add(vm)               ; version(Stats) ++vm.basic_op ; return;  
+    case Instr.Sub      : sub(vm)               ; version(Stats) ++vm.basic_op ; return;  
+    case Instr.Mul      : mul(vm)               ; version(Stats) ++vm.basic_op ; return;  
+    case Instr.Div      : div(vm)               ; version(Stats) ++vm.basic_op ; return;  
+    case Instr.Leq      : leq(vm)               ; version(Stats) ++vm.basic_op ; return;  
+    case Instr.Eq       : eq(vm)                ; version(Stats) ++vm.basic_op ; return;  
+    case Instr.Apply    : apply(vm)             ; version(Stats) version(Stats) ++vm.other ; return;  
+    case Instr.Update   : update(vm)            ; version(Stats) ++vm.other ; return;  
+    case Instr.Halt     : halt(vm)              ; version(Stats) ++vm.other ; return;  
+    case Instr.Neg      : neg(vm)               ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Not      : not(vm)               ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Mod      : mod(vm)               ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Neq      : neq(vm)               ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Le       : le(vm)                ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Geq      : geq(vm)               ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Gr       : gr(vm)                ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Or       : or(vm)                ; version(Stats) ++vm.basic_op ;return;   
+    case Instr.And      : and(vm)               ; version(Stats) ++vm.basic_op ;return;  
+    case Instr.Nil      : nil(vm)               ; version(Stats) ++vm.other ; return;  
+    case Instr.Cons     : cons(vm)              ; version(Stats) ++vm.other ; return;       
+    case Instr.Loadc    : loadc(i.arg1,vm)      ; version(Stats) ++vm.other ; return;  
+    case Instr.Pushloc  : pushloc(i.arg1,vm)    ; version(Stats) ++vm.other ; return;  
+    case Instr.Pushglob : pushglob(i.arg1,vm)   ; version(Stats) ++vm.other ; return;  
+    case Instr.Targ     : targ(i.arg1,vm)       ; version(Stats) ++vm.other ; return;  
+    case Instr.Return   : ret(i.arg1,vm)        ; version(Stats) ++vm.other ; return;  
+    case Instr.Slide    : slide(i.arg1,vm)      ; version(Stats) ++vm.other ; return;  
+    case Instr.Alloc    : alloc(i.arg1,vm)      ; version(Stats) ++vm.other ; return;  
+    case Instr.Rewrite  : rewrite(i.arg1,vm)    ; version(Stats) ++vm.other ; return;  
+    case Instr.Mkvec    : mkvec(i.arg1,vm)      ; version(Stats) ++vm.other ; return;  
+    case Instr.Getvec   : getvec(i.arg1,vm)     ; version(Stats) ++vm.other ; return;  
+    case Instr.Get      : get(i.arg1,vm)        ; version(Stats) ++vm.other ; return;  
+    case Instr.Mkclos   : mkclos(i.arg1,vm)     ; version(Stats) ++vm.other ; return;  
+    case Instr.Mkfunval : mkfunval(i.arg1,vm)   ; version(Stats) ++vm.other ; return;  
+    case Instr.Mark     : mark(i.arg1,vm)       ; version(Stats) ++vm.other ; return;  
+    case Instr.Jumpz    : jumpz(i.arg1,vm)      ; version(Stats) ++vm.jumpzs; return;  
+    case Instr.Jump     : jump(i.arg1,vm)       ; version(Stats) ++vm.jumps ; return;  
+    case Instr.Tlist    : tlist(i.arg1,vm)      ; version(Stats) ++vm.other ; return;  
+    case Instr.Move     : move(i.arg1,i.arg2,vm); version(Stats) ++vm.other ; return;  
   }
 }
 
 class VM {
-  protected:
-    instr[] ins;
-    int     pc;
+  protected: 
+    // Virtual machine state
+    instr[] ins;  // instruction array
+    int     pc;   // program counter
     
-    Value[] stack;
-    int     fp;
-    HObject gp;
+    Value[] stack; // stack state
+    int     fp;    // frame pointer
+    HObject gp;    // globals pinter
     
-    bool    halted;
+    bool    halted; // has machine stopped
+  
+  public:
+    version(Stats){
+    // statistics
+    int jumps;     // number of unconditional jumps
+    int jumpzs;    // number of conditional jumps
+    int basic_op;  // number of arithmetic and logic ops
+    int other;     // all other ops
+    
+    int objects;   // objects created
+    int max_stack; // max stack size
+    }
   public:
     this(){
+      // vm state
       pc = 0;
       fp = -1;
       gp = null;
       halted = false;
+      version(Stats) {
+        // reset stats
+        jumps = jumpzs = basic_op = other = 0;
+        objects   = 0;
+        max_stack = 0;
+      }
+    }
+    
+    this(string s){
+      this();
+      readMama(s);
     }
   
+    // execute one step
     void step(){
       if (! halted){
         exec_instr(ins[pc++],this);
       }
     }
 
-    void run(){
-      while (! halted){
+    // run program until it halts
+    HObject run(int steps = -2){
+      while (! halted && steps-- != 0){
         exec_instr(ins[pc++],this);
       }
+      assert(stack.length == 1 && halted, "code did not finish properly" );
+      return stack[0].addrData;
     }
     
+    // parse mama file
     void readMama(string str)
     {
       instr [] res;
@@ -253,10 +295,16 @@ class VM {
               lable_tbl[words[0][0..$-1]] = res.length;
               words = words[1..$];
             /* "lable : " case */
-            } else if (words.length && words[1] == ":"){
+            } else if (words.length > 1 && words[1] == ":"){
               assert(!(words[0] in lable_tbl));
               lable_tbl[words[0]] = res.length;
               words = words[2..$];
+            /* "lable :<other>" case */
+            } else if (words.length > 2 && words[1][0] == ':'){
+              words[1] = words[1][1..$];
+              assert(!(words[0] in lable_tbl));
+              lable_tbl[words[0]] = res.length;
+              words = words[1..$];
             /* could not parse */
             } else {
               throw new Error(format("parse error on: %s",words[0]));
@@ -266,9 +314,10 @@ class VM {
       }
       
       // resolve references
-      foreach(lable, addr; lable_tbl){
-        foreach(i;jump_tbl[lable]){
-          res[i].arg1 = addr;
+      foreach(lable, instrs; jump_tbl){
+        assert(lable in lable_tbl, format("lable %s undefined",lable));
+        foreach(i;instrs){
+          res[i].arg1 = lable_tbl[lable];
         }
       }
       
@@ -276,9 +325,9 @@ class VM {
       ins = res;
     }
 
-
+    // state string
     string toString(){
-      string str = format("PC = %d \t SP = %d \t FP = %d\n GP = %s \n STACK: \n",pc,stack.length-1,fp,gp);
+      string str = format("PC = %d \t SP = %d \t FP = %d\nGP = %s \n STACK: \n",pc,stack.length-1,fp,gp);
       
       foreach(i,e;stack){
         str ~= format("%s\n",e);
@@ -286,122 +335,176 @@ class VM {
       
       return str;
     }
+
+    // state string
+    version(Stats) 
+    string stats(){
+      string fs = "Statistics: \njump: \t %d\t\tbasic_ops: \t%d\njumpz: \t %d\t\tother:  \t%d\nmax stack size:    \t%d \nheap objects created: \t%d";
+      string str = format(fs,jumps,basic_op,jumpzs,other,max_stack,objects);
+      
+      return str;
+    }
 }
 
+// somewhat-typed stack
 struct Value {
-  enum : int {Int, Address};
-  int type;
-  union{
-    int     intData;
-    HObject addrData;
-  }
+  private:
+    union{
+      int     _intData;
+      HObject _addrData;
+    }
   
-  static Value VInt(int i){
-    Value v;
-    v.type    = Int;
-    v.intData = i;
-    return v;
-  }
+  public:
+    enum : int {Int, Address};
+    int type;
+    
+    static Value VInt(int i){
+      Value v;
+      v.type    = Int;
+      v._intData = i;
+      return v;
+    }
 
-  static Value VAddr(HObject i){
-    Value v;
-    v.type     = Address;
-    v.addrData = i;
-    return v;
-  }
-  
-  string toString(){    
-    return type==Int ? format(intData) : format("@",addrData);
-  }
-  
+    static Value VAddr(HObject i){
+      Value v;
+      v.type      = Address;
+      v._addrData = i;
+      return v;
+    }
+    
+    int intData() in { 
+      assert(type == Int);
+    } body {
+      return _intData;
+    }
+
+    HObject addrData() in { 
+      assert(type == Address); 
+    } body {
+      return _addrData;
+    }
+    
+    string toString(){    
+      return type==Int ? format(intData) : format("@",addrData);
+    }
+    
+    invariant{
+      assert(type == Int || type == Address);
+    }
 }
 
+// Heap Object class
 class HObject {
-  public:
-    enum : int {B, C, F, V, LNil,LCons};
-    int type;
+  private:
     union{
-      int bv;
+      int _bv;
       struct{
-        int     ccp;
-        HObject cgp;
+        int     _ccp;
+        HObject _cgp;
       }
       struct{
-        int     fcp;
-        HObject fap,fgp;
+        int     _fcp;
+        HObject _fap,_fgp;
       }
       struct{
-        int       vn;
-        HObject[] vv;
+        int       _vn;
+        HObject[] _vv;
       }
       struct{
-        HObject   lhd;
-        HObject   ltl;
+        HObject   _lhd;
+        HObject   _ltl;
       }
     }
     
+  public:
+    enum : int {B, C, F, V, LNil,LCons};
+    int type;
+    
+    // accessors that typecheck objects
+    int       bv()  in { assert(type == B);     } body { return _bv;  }
+    int       ccp() in { assert(type == C);     } body { return _ccp; }
+    HObject   cgp() in { assert(type == C);     } body { return _cgp; }
+    int       fcp() in { assert(type == F);     } body { return _fcp; }
+    HObject   fap() in { assert(type == F);     } body { return _fap; }
+    HObject   fgp() in { assert(type == F);     } body { return _fgp; }
+    int       vn()  in { assert(type == V);     } body { return _vn;  }
+    HObject[] vv()  in { assert(type == V);     } body { return _vv;  }
+    HObject   lhd() in { assert(type == LCons); } body { return _lhd; }
+    HObject   ltl() in { assert(type == LCons); } body { return _ltl; }
+
     this(){
       type = LNil;
     }
 
     this(int i){
       type = B;
-      bv = i;
+      _bv = i;
     }
 
     this(int i, HObject o){
       type = C;
-      ccp  = i;
-      cgp  = o;
+      _ccp  = i;
+      _cgp  = o;
     }
 
     this(HObject i, HObject o){
       type = LCons;
-      lhd  = i;
-      ltl  = o;
+      _lhd  = i;
+      _ltl  = o;
     }
 
     this(int i, HObject o, HObject s){
       type = F;
-      fcp  = i;
-      fap  = o;
-      fgp  = s;
+      _fcp  = i;
+      _fap  = o;
+      _fgp  = s;
     }
 
     this(int i, HObject[] o){
       type = V;
-      vn   = i;
-      vv   = o;
+      _vn   = i;
+      _vv   = o;
     }
     
     void rewrite(HObject o){
       switch(type = o.type){
-        case B: bv = o.bv; break;
-        case C: ccp = o.ccp; cgp = o.cgp; break;
-        case F: fcp = o.fcp; fap = o.fap; fgp = o.fgp; break;
-        case V: vn  = o.vn;  vv  = o.vv ; break;
+        case B: _bv = o.bv; break;
+        case C: _ccp = o.ccp; _cgp = o.cgp; break;
+        case F: _fcp = o.fcp; _fap = o.fap; _fgp = o.fgp; break;
+        case V: _vn  = o.vn;  _vv  = o.vv ; break;
         case LNil: break;
-        case LCons: lhd = o.lhd; ltl = o.ltl; break;
+        case LCons: _lhd = o.lhd; _ltl = o.ltl; break;
       }
     }
     
     string toString(){
       switch (type) {
-        case B: return format("Basic: ",bv);
-        case C: return format("Closure(%s)",ccp);
-        case F: return format("Function");
-        case V: return format("Vector(%d,%s) ",vn,vv);
-        case LNil: return format("Nil");
+        case B    : return format("%d",bv);
+        case C    : return format("Closure(%s)",ccp);
+        case F    : return format("Function(%s)",fcp);
+        case V    : return format("Vector(%d,%s) ",vn,vv);
+        case LNil : return format("Nil");
         case LCons: return format("%s : %s", lhd, ltl);
       }
     }
+    
+    invariant{
+      assert(type == B || type == C || type == F || type == V || type == LNil || type == LCons);
+    }
 }
+
 
 // instructions as functions -- hopefully compiler can inline some
 
 void mkbasic(VM vm) {
   assert(vm.stack[$-1].type == Value.Int);
   vm.stack[$-1] = Value.VAddr(new HObject(vm.stack[$-1].intData));
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+unittest {
+  assert((new VM("loadc 10 mkbasic halt")).run(3).bv == 10);
+  assert((new VM("loadc 42 mkbasic halt")).run(3).bv == 42);
 }
 
 void getbasic(VM vm)
@@ -409,6 +512,11 @@ void getbasic(VM vm)
   assert(vm.stack[$-1].type          == Value.Address);
   assert(vm.stack[$-1].addrData.type == HObject.B);
   vm.stack[$-1] = Value.VInt(vm.stack[$-1].addrData.bv);
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+unittest {
+  assert((new VM("loadc 32 loadc 10 mkbasic getbasic add mkbasic halt")).run(7).bv == 42);
 }
 
 
@@ -429,6 +537,7 @@ void eval(VM vm) {
     vm.gp = vm.stack[$-1].addrData.cgp;
     vm.pc = vm.stack[$-1].addrData.ccp;
     vm.stack = vm.stack[0..$-1];
+    version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
   }
 }
 
@@ -437,6 +546,7 @@ void add(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData + vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 
@@ -445,6 +555,7 @@ void sub(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData - vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void mul(VM vm) { 
@@ -452,6 +563,7 @@ void mul(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData * vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void div(VM vm) { 
@@ -459,6 +571,7 @@ void div(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData / vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void leq(VM vm) { 
@@ -466,6 +579,7 @@ void leq(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData <= vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void eq(VM vm) { 
@@ -473,6 +587,7 @@ void eq(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData == vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void apply(VM vm) {
@@ -486,6 +601,7 @@ void apply(VM vm) {
   foreach(e;h.fap.vv){
     vm.stack ~= Value.VAddr(e);
   }
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void update(VM vm) { 
@@ -505,6 +621,8 @@ void update(VM vm) {
     vm.stack[fp-3].addrData.rewrite(vm.stack[$-1].addrData);
 
     vm.stack = vm.stack[0..fp-2];
+    
+    version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void halt(VM vm){ 
@@ -514,11 +632,13 @@ void halt(VM vm){
 void neg(VM vm) { 
   assert(vm.stack[$-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(- vm.stack[$-1].intData);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void not(VM vm) { 
   assert(vm.stack[$-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(! vm.stack[$-1].intData);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void mod(VM vm) { 
@@ -526,6 +646,7 @@ void mod(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData % vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void neq(VM vm) { 
@@ -533,6 +654,7 @@ void neq(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData != vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void le(VM vm) { 
@@ -540,6 +662,7 @@ void le(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData < vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void geq(VM vm) { 
@@ -547,6 +670,7 @@ void geq(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData >= vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void gr(VM vm) { 
@@ -554,6 +678,7 @@ void gr(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData > vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void or(VM vm) { 
@@ -561,6 +686,7 @@ void or(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData || vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void and(VM vm) { 
@@ -568,10 +694,13 @@ void and(VM vm) {
   assert(vm.stack[$-1-1].type == Value.Int);
   vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData && vm.stack[$-1].intData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void nil(VM vm) { 
   vm.stack ~= Value.VAddr(new HObject());
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void cons(VM vm) { 
@@ -579,22 +708,27 @@ void cons(VM vm) {
   assert(vm.stack[$-2].type == Value.Address);
   vm.stack[$-2] = Value.VAddr(new HObject(vm.stack[$-2].addrData,vm.stack[$-1].addrData));
   vm.stack = vm.stack[0..$-1];
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 
 
 void loadc(int arg, VM vm) { 
   vm.stack ~= Value.VInt(arg);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void pushloc(int arg, VM vm) { 
   assert(vm.stack[$-1-arg].type == Value.Address);
   vm.stack ~= Value.VAddr(vm.stack[$-1-arg].addrData);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void pushglob(int arg, VM vm) { 
   assert(vm.gp.type == HObject.V);
   vm.stack ~= Value.VAddr(vm.gp.vv[arg]);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void targ(int arg, VM vm) { 
@@ -625,6 +759,8 @@ void targ(int arg, VM vm) {
     vm.fp = vm.stack[fp-1].intData;
 
     vm.stack = vm.stack[0..fp-1];
+    version(Stats) vm.objects+=3;
+    version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
   }
 }
 
@@ -661,17 +797,21 @@ void ret(int arg, VM vm) {
       vm.stack ~= Value.VAddr(e);
     }
   }
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void slide(int arg, VM vm) { 
   vm.stack[$-1-arg] = vm.stack[$-1];
   vm.stack = vm.stack[0..$-arg];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void alloc(int arg, VM vm) { 
   for(int i = 0; i < arg; ++i){
     vm.stack ~= Value.VAddr(new HObject(-1,cast(HObject)null));
+    version(Stats) vm.objects++;
   }
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void rewrite(int arg, VM vm) { 
@@ -679,6 +819,7 @@ void rewrite(int arg, VM vm) {
   assert(vm.stack[$-1].type == Value.Address);
   vm.stack[$-1-arg].addrData.rewrite(vm.stack[$-1].addrData);
   vm.stack = vm.stack[0..$-1];
+  version(Stats)  if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void mkvec(int arg, VM vm) {
@@ -689,6 +830,8 @@ void mkvec(int arg, VM vm) {
   }
   vm.stack = vm.stack[0..$-arg];
   vm.stack ~= Value.VAddr(new HObject(arg,arr));
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void getvec(int arg, VM vm) { 
@@ -698,12 +841,14 @@ void getvec(int arg, VM vm) {
   vm.stack = vm.stack[0..$-1];
   foreach(e;o.vv)
     vm.stack ~= Value.VAddr(e);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void get(int arg, VM vm) { 
   assert(vm.stack[$-1].type == Value.Address);
   assert(vm.stack[$-1].addrData.type == HObject.V);
   vm.stack[$-1] = Value.VAddr(vm.stack[$-1].addrData.vv[arg]);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 
@@ -711,6 +856,8 @@ void mkclos(int arg, VM vm) {
   assert(vm.stack[$-1].type == Value.Address);
   assert(vm.stack[$-1].addrData.type == HObject.V);
   vm.stack[$-1] = Value.VAddr(new HObject(arg,vm.stack[$-1].addrData));
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void mkfunval(int arg, VM vm) { 
@@ -718,6 +865,8 @@ void mkfunval(int arg, VM vm) {
   assert(vm.stack[$-1].addrData.type == HObject.V);
   HObject h = new HObject(0,[]);
   vm.stack[$-1] = Value.VAddr(new HObject(arg,h,vm.stack[$-1].addrData));
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void mark(int arg, VM vm) { 
@@ -725,6 +874,7 @@ void mark(int arg, VM vm) {
   vm.stack ~= Value.VInt(vm.fp);
   vm.stack ~= Value.VInt(arg);
   vm.fp = vm.stack.length-1;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void jumpz(int arg, VM vm) { 
@@ -732,10 +882,12 @@ void jumpz(int arg, VM vm) {
   if (vm.stack[$-1].intData == 0)
     vm.pc = arg;
   vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void jump(int arg, VM vm) { 
     vm.pc = arg;
+    version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void tlist(int arg, VM vm) { 
@@ -748,7 +900,9 @@ void tlist(int arg, VM vm) {
     vm.stack[$-1]  = Value.VAddr(list.lhd);
     vm.stack      ~= Value.VAddr(list.ltl);
     vm.pc = arg;
-  } else assert(false,"Not a list");
+  } else throw new Error("tlist: not given a list");
+  
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 void move(int r, int k, VM vm) { 
@@ -756,17 +910,22 @@ void move(int r, int k, VM vm) {
     vm.stack[$-k-r+i] = e;
   }
   vm.stack = vm.stack[0..$-r];
+  
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
 
 
 
 
 /* string processing  */
+
+// drop all whitespace from front
 string dropWhite(string str){
   size_t i = 0;
   for(;str.length > i && iswhite(str[i]);++i) {};
   return str[i..$];
 }
+
 
 string takeUntil(string str, dchar d)
 {
@@ -785,6 +944,13 @@ string filterComments(string str){
   string done;
   string cur;
   
+  // filter out she-bang
+  if (str[0..2] == "#!"){
+    auto fl = takeUntil(str,'\n');
+    str = str[fl.length..$];
+  }
+  
+  // filter out /* */-comments
   while(str.length){
     cur = takeUntil(str,'/');
     done ~= cur ;
@@ -823,946 +989,117 @@ string filterComments(string str){
   return done;
 }
 
-/*
-
-
-
-
-
-
-
-
-
-
-
-
-
-interface Instruction {
-  void exec(VM_ VM_);
+// boolean to identify if unittests are working
+bool unittestsWorking = false;
+unittest{
+  unittestsWorking = true;
 }
 
-abstract class aIntInstruction : Instruction {
-  public:
-    int arg;
-  
-    this(int i){
-      arg = i;
-    }
-}
-
-abstract class aStringInstruction : Instruction {
-  public:
-    string arg;
-  
-    this(string i){
-      arg = i;
-    }    
-}
-
-class MkBasic     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  {
-    assert(VM_.stack[$-1].type == Value.Int);
-    VM_.stack[$-1] = Value.VAddr(new HObject(VM_.stack[$-1].intData));
-  }
-}
-
-class GetBasic     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  {
-    assert(VM_.stack[$-1].type == Value.Address);
-    assert(VM_.stack[$-1].addrData.type == HObject.B);
-    VM_.stack[$-1] = Value.VInt(VM_.stack[$-1].addrData.bv);
-  }
-}
-
-class Eval     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Address);
-    if(VM_.stack[$-1].addrData.type == HObject.C){
-      // mark pc
-      VM_.stack ~= Value.VAddr(VM_.gp);
-      VM_.stack ~= Value.VInt(VM_.fp);
-      VM_.stack ~= Value.VInt(VM_.pc);
-      VM_.fp = VM_.stack.length-1;
-      // pushlock 3
-      assert(VM_.stack[$-1-3].type == Value.Address);
-      VM_.stack ~= Value.VAddr(VM_.stack[$-1-3].addrData);
-      // apply0
-      assert(VM_.stack[$-1].type == Value.Address);
-      assert(VM_.stack[$-1].addrData.type == HObject.C);
-      VM_.gp = VM_.stack[$-1].addrData.cgp;
-      VM_.pc = VM_.stack[$-1].addrData.ccp;
-      VM_.stack = VM_.stack[0..$-1];
-    }
-  }
-}
-
-class Add      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData + VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-class Sub      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData - VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Mul      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData * VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Div      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData / VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Leq      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData <= VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Eq       
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData == VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Apply      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  {
-    assert(VM_.stack[$-1].type == Value.Address);
-    assert(VM_.stack[$-1].addrData.type == HObject.F);
-    assert(VM_.stack[$-1].addrData.fap.type == HObject.V);
-    HObject h = VM_.stack[$-1].addrData;
-    VM_.stack = VM_.stack[0..$-1];
-    VM_.gp = h.fgp;
-    VM_.pc = h.fcp;
-    foreach(e;h.fap.vv){
-      VM_.stack ~= Value.VAddr(e);
-    }
-  }
-}
-
-class Update     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-      auto fp = VM_.fp ;
-      
-      assert(VM_.stack[fp].type == Value.Int);
-      VM_.pc = VM_.stack[fp].intData;
-
-      assert(VM_.stack[fp-2].type == Value.Address);
-      VM_.gp = VM_.stack[fp-2].addrData;
-
-      assert(VM_.stack[fp-1].type == Value.Int);
-      VM_.fp = VM_.stack[fp-1].intData;
-
-      assert(VM_.stack[$-1].type == Value.Address);
-      assert(VM_.stack[fp-3].type == Value.Address);
-      VM_.stack[fp-3].addrData.rewrite(VM_.stack[$-1].addrData);
-
-      VM_.stack = VM_.stack[0..fp-2];
-  }
-}
-
-class Halt     
-  : Instruction 
-{
-  void exec(VM_ VM_){ VM_.halted = true; }
-}
-
-class Neg     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(- VM_.stack[$-1].intData);
-  }
-}
-
-class Not     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(! VM_.stack[$-1].intData);
-  }
-}
-
-class Mod      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData % VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Neq      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData != VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Le      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData < VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Geq     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData >= VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Gr      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData > VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Or     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData || VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class And      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    assert(VM_.stack[$-1-1].type == Value.Int);
-    VM_.stack[$-1-1] = Value.VInt(VM_.stack[$-1-1].intData && VM_.stack[$-1].intData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Nil      
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    VM_.stack ~= Value.VAddr(new HObject());
-  }
-}
-
-class Cons     
-  : Instruction 
-{
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Address);
-    assert(VM_.stack[$-2].type == Value.Address);
-    VM_.stack[$-2] = Value.VAddr(new HObject(VM_.stack[$-2].addrData,VM_.stack[$-1].addrData));
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-
-class Loadc    
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    VM_.stack ~= Value.VInt(arg);
-  }
-}
-
-class PushLoc   
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1-arg].type == Value.Address);
-    VM_.stack ~= Value.VAddr(VM_.stack[$-1-arg].addrData);
-  }
-}
-
-class PushGlob 
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.gp.type == HObject.V);
-    VM_.stack ~= Value.VAddr(VM_.gp.vv[arg]);
-  }
-}
-
-class TArg
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    int g = VM_.stack.length-1-VM_.fp;
-    auto fp = VM_.fp;
-    if (g < arg){
-      // mkvec0
-      HObject[] arr = new HObject[g]; 
-      foreach(i,e;VM_.stack[$-g..$].reverse){
-        assert(e.type == Value.Address);
-        arr[i] = e.addrData;
-      }
-      auto ap = new HObject(g,arr);
-
-      //  wrap A
-      HObject f = new HObject(VM_.pc-1,ap,VM_.gp);
-
-      // popenv      
-
-      assert(VM_.stack[fp-2].type == Value.Address);
-      VM_.gp = VM_.stack[fp-2].addrData;
-      VM_.stack[fp-2] = Value.VAddr(f); 
-
-      assert(VM_.stack[fp].type == Value.Int);
-      VM_.pc = VM_.stack[fp].intData;
-
-      assert(VM_.stack[fp-1].type == Value.Int);
-      VM_.fp = VM_.stack[fp-1].intData;
-
-      VM_.stack = VM_.stack[0..fp-1];
-    }
-  }
-}
-
-class Return  
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    auto sp = VM_.stack.length-1;
-    auto fp = VM_.fp;
-    if (sp - fp == arg + 1){
-      // popenv
-      assert(VM_.stack[fp-2].type == Value.Address);
-      VM_.gp = VM_.stack[fp-2].addrData;      
-      
-      VM_.stack[fp-2] = VM_.stack[$-1] ;
-      
-      assert(VM_.stack[fp].type == Value.Int);
-      VM_.pc = VM_.stack[fp].intData;
-            
-      assert(VM_.stack[fp-1].type == Value.Int);
-      VM_.fp = VM_.stack[fp-1].intData;
-      
-      VM_.stack = VM_.stack[0..fp-1];
-    } else {
-      // slide k
-      VM_.stack[$-1-arg] = VM_.stack[$-1];
-      VM_.stack = VM_.stack[0..$-arg];
-      // apply
-      assert(VM_.stack[$-1].type == Value.Address);
-      assert(VM_.stack[$-1].addrData.type == HObject.F);
-      assert(VM_.stack[$-1].addrData.fap.type == HObject.V);
-      HObject h = VM_.stack[$-1].addrData;
-      VM_.stack = VM_.stack[0..$-1];
-      VM_.gp = h.fgp;
-      VM_.pc = h.fcp;
-      foreach(e;h.fap.vv){
-        VM_.stack ~= Value.VAddr(e);
-      }
-    }
-  }
-}
-
-class Slide 
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    VM_.stack[$-1-arg] = VM_.stack[$-1];
-    VM_.stack = VM_.stack[0..$-arg];
-  }
-}
-
-class Alloc
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    for(int i = 0; i < arg; ++i){
-      VM_.stack ~= Value.VAddr(new HObject(-1,cast(HObject)null));
-    }
-  }
-}
-
-class Rewrite
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1-arg].type == Value.Address);
-    assert(VM_.stack[$-1].type == Value.Address);
-    VM_.stack[$-1-arg].addrData.rewrite(VM_.stack[$-1].addrData);
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class MkVec
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  {
-    HObject[] arr;
-    foreach(e;VM_.stack[$-arg..$]){
-      assert(e.type == Value.Address);
-      arr ~= e.addrData;
-    }
-    VM_.stack = VM_.stack[0..$-arg];
-    VM_.stack ~= Value.VAddr(new HObject(arg,arr));
-  }
-}
-
-class GetVec 
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Address);
-    assert(VM_.stack[$-1].addrData.type == HObject.V );
-    HObject o = VM_.stack[$-1].addrData;
-    VM_.stack = VM_.stack[0..$-1];
-    foreach(e;o.vv)
-      VM_.stack ~= Value.VAddr(e);
-  }
-}
-
-
-class Get   
-  : aIntInstruction 
-{ 
-  this(int i) { super(i); } 
-  void exec(VM_ VM_)
-  { 
-  }
-}
-
-
-
-
-
-class MkClos   
-  : aStringInstruction 
-{  
-  this(string i) 
-  { 
-    super(i); 
-  }
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Address);
-    assert(VM_.stack[$-1].addrData.type == HObject.V);
-    VM_.stack[$-1] = Value.VAddr(new HObject(VM_.lables[arg],VM_.stack[$-1].addrData));
-  }
-}
-
-class MkFunVal 
-  : aStringInstruction 
-{  
-  this(string i) 
-  { 
-    super(i); 
-  }
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Address);
-    assert(VM_.stack[$-1].addrData.type == HObject.V);
-    HObject h = new HObject(0,[]);
-    VM_.stack[$-1] = Value.VAddr(new HObject(VM_.lables[arg],h,VM_.stack[$-1].addrData));
-  }
-}
-
-class Mark 
-  : aStringInstruction 
-{  
-  this(string i) 
-  { 
-    super(i); 
-  }
-  void exec(VM_ VM_)
-  { 
-    VM_.stack ~= Value.VAddr(VM_.gp);
-    VM_.stack ~= Value.VInt(VM_.fp);
-    VM_.stack ~= Value.VInt(VM_.lables[arg]);
-    VM_.fp = VM_.stack.length-1;
-  }
-}
-
-class Jumpz    
-  : aStringInstruction 
-{  
-  this(string i) 
-  { 
-    super(i); 
-  }
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Int);
-    if (VM_.stack[$-1].intData == 0)
-      VM_.pc = VM_.lables[arg];
-    VM_.stack = VM_.stack[0..$-1];
-  }
-}
-
-class Jump 
-  : aStringInstruction 
-{  
-  this(string i) 
-  { 
-    super(i); 
-  }
-  void exec(VM_ VM_)
-  { 
-      VM_.pc = VM_.lables[arg];
-  }
-}
-
-class TList
-  : aStringInstruction 
-{  
-  this(string i) 
-  { 
-    super(i); 
-  }
-  void exec(VM_ VM_)
-  { 
-    assert(VM_.stack[$-1].type == Value.Address);
+// prints usage informations
+void printUsage(){
+    writefln("Usage: mama [options] <file.cbn> ");  
+    writefln("Options: -v       \t print state and instruction on every step");  
+    writefln("         -i       \t print instruction for every step");  
+    writefln("         -s       \t after execution, print statistics ");  
+    writefln("         -r       \t only print result (overrides all previous) ");  
+    writefln("         -?       \t this text ");  
+    writefln("         -steps n \t execute at most n steps");  
+    writefln();  
+    writefln("Built on %s using %s",__TIMESTAMP__,__VENDOR__);  
     
-    if (VM_.stack[$-1].addrData.type == HObject.LNil) {
-      VM_.stack = VM_.stack[0..$-1];
-    } else if (VM_.stack[$-1].addrData.type == HObject.LCons) {
-      auto list = VM_.stack[$-1].addrData;
-      VM_.stack[$-1]  = Value.VAddr(list.lhd);
-      VM_.stack      ~= Value.VAddr(list.ltl);
-      VM_.pc = VM_.lables[arg];
-    } else assert(false,"Not a list");
-  }
+    try {
+      int x;
+      assert(x == 0 && x == 1 );
+      writefln("Warning: built in 'release' mode so 'type' checks are disabled. ");
+    } catch  {}
+    
+    if (!unittestsWorking)
+      writefln("Warning: built without unittests enabled -- nothing might work ");    
 }
-
-class Move
-  : Instruction
-{  
-  int r, k;
-  
-  this(int r, int k) 
-  { 
-    this.r = r;
-    this.k = k;
-  }
-  void exec(VM_ VM_)
-  { 
-    foreach(i,e;VM_.stack[$-k..$]){
-      VM_.stack[$-k-r+i] = e;
-    }
-    VM_.stack = VM_.stack[0..$-r];
-  }
-}
-
-
-string dropWhite(string str){
-  size_t i = 0;
-  for(;str.length > i && iswhite(str[i]);++i) {};
-  return str[i..$];
-}
-
-string takeUntil(string str, dchar d)
-{
-  int v = str.length;
-  foreach(i,c;str){
-    if (c == d){
-      v = i;
-      break;
-    }
-  }
-  return str[0..v];
-}
-
-
-string filterComments(string str){
-  string done;
-  string cur;
-  
-  while(str.length){
-    cur = takeUntil(str,'/');
-    done ~= cur ;
-    str = str[cur.length .. $];
-
-    if (str.length < 2) {
-      done ~= str;
-      break;
-    }
-    
-    if (str[1] == '*'){
-      str = str[2..$];
-    } else {
-      done ~= "/" ;
-      str = str[1..$];
-      continue;
-    }
-    
-    
-    cur = takeUntil(str,'*');
-    str = str[cur.length .. $];
-    
-    if (str.length < 2) break;
-    
-    while (str[1] != '/'){
-      cur = takeUntil(str,'*');
-      str = str[cur.length  .. $];
-      
-      if (str.length < 2) break;
-    }
-    
-    if (str.length < 2) break;
-    str = str[2..$];
-  }
-  
-  return done;
-}
-
-struct Value {
-  enum : int {Int, Address};
-  int type;
-  union{
-    int     intData;
-    HObject addrData;
-  }
-  
-  static Value VInt(int i){
-    Value v;
-    v.type    = Int;
-    v.intData = i;
-    return v;
-  }
-
-  static Value VAddr(HObject i){
-    Value v;
-    v.type     = Address;
-    v.addrData = i;
-    return v;
-  }
-  
-  string toString(){    
-    return type==Int ? format(intData) : format("@",addrData);
-  }
-  
-}
-
-class HObject {
-  public:
-    enum : int {B, C, F, V, LNil,LCons};
-    int type;
-    union{
-      int bv;
-      struct{
-        int     ccp;
-        HObject cgp;
-      }
-      struct{
-        int     fcp;
-        HObject fap,fgp;
-      }
-      struct{
-        int       vn;
-        HObject[] vv;
-      }
-      struct{
-        HObject   lhd;
-        HObject   ltl;
-      }
-    }
-    
-    this(){
-      type = LNil;
-    }
-
-    this(int i){
-      type = B;
-      bv = i;
-    }
-
-    this(int i, HObject o){
-      type = C;
-      ccp  = i;
-      cgp  = o;
-    }
-
-    this(HObject i, HObject o){
-      type = LCons;
-      lhd  = i;
-      ltl  = o;
-    }
-
-    this(int i, HObject o, HObject s){
-      type = F;
-      fcp  = i;
-      fap  = o;
-      fgp  = s;
-    }
-
-    this(int i, HObject[] o){
-      type = V;
-      vn   = i;
-      vv   = o;
-    }
-    
-    void rewrite(HObject o){
-      switch(type = o.type){
-        case B: bv = o.bv; break;
-        case C: ccp = o.ccp; cgp = o.cgp; break;
-        case F: fcp = o.fcp; fap = o.fap; fgp = o.fgp; break;
-        case V: vn  = o.vn;  vv  = o.vv ; break;
-        case LNil: break;
-        case LCons: lhd = o.lhd; ltl = o.ltl; break;
-      }
-    }
-    
-    string toString(){
-      switch (type) {
-        case B: return format("Basic: ",bv);
-        case C: return format("Closure(%s)",ccp);
-        case F: return format("Function");
-        case V: return format("Vector(%d,%s) ",vn,vv);
-        case LNil: return format("Nil");
-        case LCons: return format("%s : %s", lhd, ltl);
-      }
-    }
-}
-
-class VM_ {
-  protected:
-    int[string]   lables;
-    Instruction[] instr;
-    int           pc;
-    
-    Value[]       stack;
-    int           fp;
-    HObject       gp;
-    
-    bool          halted;
-  public:
-    this(){
-      pc = 0;
-      fp = -1;
-      halted = false;
-    }
-  
-    void step(){
-      if (! halted){
-        instr[pc++].exec(this);
-      }
-    }
-
-    void run(){
-      while (! halted){
-        instr[pc++].exec(this);
-      }
-    }
-    
-    void readMama(string str)
-    {
-      Instruction[] res;
-      string[]      words;
-      
-      words = str.filterComments().tolower().split();
-      
-      while (words.length) {
-        switch (words[0]) {
-          case "mkbasic"  : res ~= new MkBasic                  ; words = words[1..$]; break;
-          case "getbasic" : res ~= new GetBasic                 ; words = words[1..$]; break;
-          case "eval"     : res ~= new Eval                     ; words = words[1..$]; break;
-          case "add"      : res ~= new Add                      ; words = words[1..$]; break;
-          case "sub"      : res ~= new Sub                      ; words = words[1..$]; break;
-          case "mul"      : res ~= new Mul                      ; words = words[1..$]; break;
-          case "div"      : res ~= new Div                      ; words = words[1..$]; break;
-          case "leq"      : res ~= new Leq                      ; words = words[1..$]; break;
-          case "eq"       : res ~= new Eq                       ; words = words[1..$]; break;
-          case "apply"    : res ~= new Apply                    ; words = words[1..$]; break;
-          case "update"   : res ~= new Update                   ; words = words[1..$]; break;
-          case "halt"     : res ~= new Halt                     ; words = words[1..$]; break;
-          case "neg"      : res ~= new Neg                      ; words = words[1..$]; break;
-          case "not"      : res ~= new Not                      ; words = words[1..$]; break;
-          case "mod"      : res ~= new Mod                      ; words = words[1..$]; break;
-          case "neq"      : res ~= new Neq                      ; words = words[1..$]; break;
-          case "le"       : res ~= new Le                       ; words = words[1..$]; break;
-          case "geq"      : res ~= new Geq                      ; words = words[1..$]; break;
-          case "gr"       : res ~= new Gr                       ; words = words[1..$]; break;
-          case "or"       : res ~= new Or                       ; words = words[1..$]; break;
-          case "and"      : res ~= new And                      ; words = words[1..$]; break;
-          case "nil"      : res ~= new Nil                      ; words = words[1..$]; break;
-          case "cons"     : res ~= new Cons                     ; words = words[1..$]; break;
-          case "loadc"    : res ~= new Loadc   (atoi(words[1])) ; words = words[2..$]; break;
-          case "pushloc"  : res ~= new PushLoc (atoi(words[1])) ; words = words[2..$]; break;
-          case "pushglob" : res ~= new PushGlob(atoi(words[1])) ; words = words[2..$]; break;
-          case "targ"     : res ~= new TArg    (atoi(words[1])) ; words = words[2..$]; break;
-          case "return"   : res ~= new Return  (atoi(words[1])) ; words = words[2..$]; break; 
-          case "slide"    : res ~= new Slide   (atoi(words[1])) ; words = words[2..$]; break;
-          case "alloc"    : res ~= new Alloc   (atoi(words[1])) ; words = words[2..$]; break;
-          case "rewrite"  : res ~= new Rewrite (atoi(words[1])) ; words = words[2..$]; break;
-          case "mkvec"    : res ~= new MkVec   (atoi(words[1])) ; words = words[2..$]; break;
-          case "getvec"   : res ~= new GetVec  (atoi(words[1])) ; words = words[2..$]; break;
-          case "get"      : res ~= new Get     (atoi(words[1])) ; words = words[2..$]; break;
-          case "mkclos"   : res ~= new MkClos  (words[1])       ; words = words[2..$]; break;
-          case "mkfunval" : res ~= new MkFunVal(words[1])       ; words = words[2..$]; break;
-          case "mark"     : res ~= new Mark    (words[1])       ; words = words[2..$]; break;
-          case "jumpz"    : res ~= new Jumpz   (words[1])       ; words = words[2..$]; break;
-          case "jump"     : res ~= new Jump    (words[1])       ; words = words[2..$]; break;
-          case "tlist"    : res ~= new TList   (words[1])       ; words = words[2..$]; break;
-          case "move"     : res ~= new Move(atoi(words[1]),atoi(words[2]))  ; words = words[3..$]; break;
-          default:
-            if (words[0][$-1] == ':'){
-              assert(!(words[0][0..$-1] in lables));
-              lables[words[0][0..$-1]] = res.length;
-              words = words[1..$];
-            } else if (words.length && words[1] == ":"){
-              assert(!(words[0] in lables));
-              lables[words[0]] = res.length;
-              words = words[2..$];
-            } else {
-              writefln("parse error on: %s",words[0]);
-              return;
-            }
-        }
-      }
-      
-      instr = res;
-    }
-
-
-    string toString(){
-      string str = format("PC = %d \t SP = %d \t FP = %d\n GP = %s \n STACK: \n",pc,stack.length-1,fp,gp);
-      
-      foreach(i,e;stack){
-        str ~= format("%s\n",e);
-        }
-      
-      return str;
-    }
-}
-
-*/
-
 
 int main(string[] args)
 {
-  if (args.length != 2){
-    writefln("mama <file.cbn>");
+  // usage information
+  if (args.length < 2){
+    printUsage();
     return 0;
   }
   
-  VM v1 = new VM;
-  v1.readMama(cast(char[])read(args[1]));
+  // all inputs -- will be read from cl arguments
+  string file;
+  long   run_steps = -1;
+  bool   states    = false;
+  bool   instr     = false;
+  bool   stats     = false;
+  bool   result    = false;
   
-  int step = 0;
-  while (!v1.halted){
-    step++;
-//    writefln("%d:  instr: %s",step, show_instr(v1.ins[v1.pc]));
-    v1.step();
-//    writefln(v1);
+  // process arguments
+  for(int i = 1; i < args.length; ++i){
+    if (args[i] == "-steps") { 
+      run_steps = atoi(args[i+1]);
+      i++;
+    } else if (args[i] == "-v") {
+      states = true;
+      instr  = true;
+    } else if (args[i] == "-i") {
+      instr  = true;
+    } else if (args[i] == "-s") {
+      stats  = true;
+    } else if (args[i] == "-r") {
+      result = true;
+    } else if (args[i] == "-?") {
+      printUsage();
+      return 0;
+    } else {
+      if (file.length)
+        throw new Error(format("unexpected argument: %s",args[i]));
+      file = args[i];
+    }
   }
-  writefln("program halted after %d steps", step);
-  writefln(v1);
+  
+  // create vm
+  VM v1 = new VM;
+  v1.readMama(cast(char[])read(file));
+  
+  // run programs
+  int step = 0;
+  while (!v1.halted && (run_steps < 0 || step < run_steps)){
+    step++;
+    
+    // current instruction
+    if (!result && instr) {
+      writefln("%d:\tpc:%d\tinstr: %s",step, v1.pc, show_instr(v1.ins[v1.pc]));
+    }
+    
+    // state before step
+    if (!result && states){
+      writefln(v1);
+    }
+    
+    // one step
+    v1.step();
+  }
+  
+  if (result) {
+    // print short result
+    if (v1.halted)
+      writefln(v1.stack[0].addrData);
+    else
+      writefln("<program did not halt in %d steps>",step);
+  } else {
+    // print long result
+    if (v1.halted){
+      writefln("program halted after %d steps", step);
+    } else {
+      writefln("program state after %d steps", step);
+    }
+    writefln(v1);
+  }
+  
+  version(Stats) 
+  if (stats){
+    writefln("----------\n",v1.stats(),"\n","----------");
+  }
 
   return 0;
-  
 }

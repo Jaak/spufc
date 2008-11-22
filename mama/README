@@ -13,13 +13,27 @@ Tested on gdc (mac), but probably works with dmd v1 if you change 'make.sh'.
 usage
 =====
 
-./mama <file>.puf 
+mama [options] <file.cbn> 
+Options: 
+-v       	 print state and instruction on every step       
+-i       	 print instruction for every step
+-s       	 after execution, print statistics 
+-r       	 only print result (overrides all previous) 
+-?       	 usage info 
+-steps n 	 execute at most n steps
 
-Executes a program and prints final state of the VM.
+
+
+deviations from spec
+====================
+
+* invalid pointer is 'null' not -1
 
 todo
 ====
 
 * add test codes
-* add verbosity flags
-
+* write down useful compiling flags
+* test on windows
+* get jaak to add '#!env mama' to compiler
+* figure out testing framework for the compiler 
