@@ -16,12 +16,14 @@ import qualified AST
 import qualified Rename
 import qualified Unique
 import qualified LastCall
+import qualified OptMaMa
 
 data Options = Options {
     printHelp :: Bool,
     eval :: Bool,
     mama :: Bool,
     debug :: Bool,
+    optMaMa :: Bool,
     includePaths :: [FilePath]
   }
   deriving Show
@@ -32,6 +34,7 @@ defaultOpts = Options {
     eval = False,
     mama = True,
     debug = False,
+    optMaMa = False,
     includePaths = ["."]
   }
 
@@ -46,17 +49,19 @@ optsEnableMama o = o { mama = True, eval = False }
 
 optsEnableDebug o = o { debug = True }
 
+optsEnableOptMaMa o = o { optMaMa = True }
+
 options :: [OptDescr (Options -> Options)]
 options = [
     Option ['h'] ["help"] (NoArg $ optsEnableHelp) "Display the help message",
     Option ['I'] ["include"] (ReqArg optsAddInclude "DIR") "Include paths",
     Option ['e'] ["evaluate"] (NoArg $ optsEnableEval) "Evaluate given file",
     Option ['g'] ["debug"] (NoArg $ optsEnableDebug) "Output some debug info",
+    Option ['O'] ["opt-mama"] (NoArg $ optsEnableOptMaMa) "Optimise generated mama code",
     Option [] ["mama"] (NoArg $ optsEnableMama) "Output MaMa bytecode"
   ]
 
 main :: IO ()
---main = (fmap head $ getArgs) >>= parseFile >>= print 
 main = do
   hSetBuffering stdout NoBuffering
   args <- getArgs
@@ -78,5 +83,7 @@ main = do
                 putStrLn "\n== Abstract syntax tree =="
                 putStrLn $ prettyAST $ t'
                 putStrLn "== / ==\n"
-              when (mama opt) $ mapM_ print $ codeGen sup t'
+              when (mama opt) $ do
+                let f = if optMaMa opt then OptMaMa.optimise else id
+                mapM_ print $ f $ codeGen sup t'
               when (eval opt) $ return ()

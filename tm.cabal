@@ -24,4 +24,5 @@ Executable tm
                           Parser,
                           Rename,
                           Unique,
-                          LastCall
+                          LastCall,
+                          OptMaMa
