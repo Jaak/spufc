@@ -327,10 +327,10 @@ class VM {
 
     // state string
     string toString(){
-      string str = format("PC = %d \t SP = %d \t FP = %d\nGP = %s \n STACK: \n",pc,stack.length-1,fp,gp);
+      string str = format("PC = %d \t SP = %d \t FP = %d\nGP = %s \n STACK: \n",pc,stack.length-1,fp,gp ? gp.toString() : "null");
       
       foreach(i,e;stack){
-        str ~= format("%s\n",e);
+        str ~= format("%s\n",e.toString());
         }
       
       return str;
@@ -496,17 +496,18 @@ class HObject {
 
 // instructions as functions -- hopefully compiler can inline some
 
+
+// basic values
 void mkbasic(VM vm) {
   assert(vm.stack[$-1].type == Value.Int);
   vm.stack[$-1] = Value.VAddr(new HObject(vm.stack[$-1].intData));
   version(Stats) vm.objects++;
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-unittest {
-  assert((new VM("loadc 10 mkbasic halt")).run(3).bv == 10);
-  assert((new VM("loadc 42 mkbasic halt")).run(3).bv == 42);
+void loadc(int arg, VM vm) { 
+  vm.stack ~= Value.VInt(arg);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
 void getbasic(VM vm)
 {
   assert(vm.stack[$-1].type          == Value.Address);
@@ -515,11 +516,257 @@ void getbasic(VM vm)
   version(Stats) vm.objects++;
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-unittest {
-  assert((new VM("loadc 32 loadc 10 mkbasic getbasic add mkbasic halt")).run(7).bv == 42);
+void halt(VM vm){ 
+  vm.halted = true; 
+}
+unittest{
+  assert((new VM("loadc 10 mkbasic halt")).run(3).bv == 10);
+  assert((new VM("loadc 42 mkbasic halt")).run(3).bv == 42);
+  assert((new VM("loadc 42 mkbasic getbasic mkbasic halt")).run(5).bv == 42);
 }
 
 
+// operations on basic values
+void add(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData + vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void sub(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData - vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void mul(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData * vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void div(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData / vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void leq(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData <= vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void eq(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData == vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void neg(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(- vm.stack[$-1].intData);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void not(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(! vm.stack[$-1].intData);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void mod(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData % vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void neq(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData != vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void le(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData < vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void geq(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData >= vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void gr(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData > vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void or(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData || vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void and(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Int);
+  assert(vm.stack[$-1-1].type == Value.Int);
+  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData && vm.stack[$-1].intData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+unittest{
+  assert((new VM("loadc 3 loadc 4 add loadc 4 loadc 3 add eq mkbasic halt")).run(9).bv == 1);
+  assert((new VM("loadc 3 loadc 4 mul loadc 4 loadc 3 mul eq mkbasic halt")).run(9).bv == 1);
+  assert((new VM("loadc 3 loadc 4 div loadc 4 loadc 3 div neq mkbasic halt")).run(9).bv == 1);
+  assert((new VM("loadc 3 loadc 4 sub loadc 2 loadc 3 sub  eq mkbasic halt")).run(9).bv == 1);
+  assert((new VM("loadc 3 loadc 4 sub loadc 2 loadc 3 sub  eq mkbasic halt")).run(9).bv == 1);
+  assert((new VM("loadc 1 loadc 0 or mkbasic halt")).run(5).bv == 1);
+  assert((new VM("loadc 1 loadc 0 and mkbasic halt")).run(5).bv == 0);
+  assert((new VM("loadc 0 loadc 0 or mkbasic halt")).run(5).bv == 0);
+  assert((new VM("loadc 1 loadc 1 and mkbasic halt")).run(5).bv == 1);
+  assert((new VM("loadc 3 loadc 4 gr mkbasic halt")).run(5).bv == 0);
+  assert((new VM("loadc 4 loadc 4 geq mkbasic halt")).run(5).bv == 1);
+}
+
+// list operations
+void nil(VM vm) { 
+  vm.stack ~= Value.VAddr(new HObject());
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void cons(VM vm) { 
+  assert(vm.stack[$-1].type == Value.Address);
+  assert(vm.stack[$-2].type == Value.Address);
+  vm.stack[$-2] = Value.VAddr(new HObject(vm.stack[$-2].addrData,vm.stack[$-1].addrData));
+  vm.stack = vm.stack[0..$-1];
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void tlist(int arg, VM vm) { 
+  assert(vm.stack[$-1].type == Value.Address);
+  
+  if (vm.stack[$-1].addrData.type == HObject.LNil) {
+    vm.stack = vm.stack[0..$-1];
+  } else if (vm.stack[$-1].addrData.type == HObject.LCons) {
+    auto list = vm.stack[$-1].addrData;
+    vm.stack[$-1]  = Value.VAddr(list.lhd);
+    vm.stack      ~= Value.VAddr(list.ltl);
+    vm.pc = arg;
+  } else throw new Error("tlist: not given a list");
+  
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+unittest{
+  assert((new VM("nil tlist 666 loadc 42 mkbasic halt 666:")).run(5).bv == 42);
+  assert((new VM("loadc 42 mkbasic nil cons tlist next loadc 1 next: tlist next halt")).run(10).bv == 42);
+}
+
+
+
+
+
+
+// org. and vec stuff
+void slide(int arg, VM vm) { 
+  vm.stack[$-1-arg] = vm.stack[$-1];
+  vm.stack = vm.stack[0..$-arg];
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void alloc(int arg, VM vm) { 
+  for(int i = 0; i < arg; ++i){
+    vm.stack ~= Value.VAddr(new HObject(-1,cast(HObject)null));
+    version(Stats) vm.objects++;
+  }
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void rewrite(int arg, VM vm) { 
+  assert(vm.stack[$-1-arg].type == Value.Address);
+  assert(vm.stack[$-1].type == Value.Address);
+  vm.stack[$-1-arg].addrData.rewrite(vm.stack[$-1].addrData);
+  vm.stack = vm.stack[0..$-1];
+  version(Stats)  if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void mkvec(int arg, VM vm) {
+  HObject[] arr;
+  foreach(e;vm.stack[$-arg..$]){
+    assert(e.type == Value.Address);
+    arr ~= e.addrData;
+  }
+  vm.stack = vm.stack[0..$-arg];
+  vm.stack ~= Value.VAddr(new HObject(arg,arr));
+  version(Stats) vm.objects++;
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void getvec(int arg, VM vm) { 
+  assert(vm.stack[$-1].type == Value.Address);
+  assert(vm.stack[$-1].addrData.type == HObject.V );
+  HObject o = vm.stack[$-1].addrData;
+  vm.stack = vm.stack[0..$-1];
+  foreach(e;o.vv)
+    vm.stack ~= Value.VAddr(e);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void get(int arg, VM vm) { 
+  assert(vm.stack[$-1].type == Value.Address);
+  assert(vm.stack[$-1].addrData.type == HObject.V);
+  vm.stack[$-1] = Value.VAddr(vm.stack[$-1].addrData.vv[arg]);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void move(int r, int k, VM vm) { 
+  foreach(i,e;vm.stack[$-k..$]){
+    vm.stack[$-k-r+i] = e;
+  }
+  vm.stack = vm.stack[0..$-r];
+  
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+unittest{
+  assert((new VM("loadc 1 mkbasic loadc 2 mkbasic mkvec 2 loadc 42 mkbasic slide 1 halt")).run(9).bv == 42);
+  assert((new VM("loadc 42 mkbasic loadc 1 mkbasic loadc 2 mkbasic mkvec 3 get 0 halt")).run(10).bv == 42);
+  assert((new VM("loadc 0 mkbasic loadc 1 mkbasic loadc 42 mkbasic mkvec 3 get 2 halt")).run(10).bv == 42);
+  assert((new VM("alloc 3 loadc 3 mkbasic rewrite 3 loadc 4 mkbasic rewrite 1 move 1 1 getbasic pushloc 1 getbasic add mkbasic slide 1 halt")).run(15).bv == 7);
+}
+
+
+
+// all the rest -- fun stuff
+void pushloc(int arg, VM vm) { 
+  assert(vm.stack[$-1-arg].type == Value.Address);
+  vm.stack ~= Value.VAddr(vm.stack[$-1-arg].addrData);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void pushglob(int arg, VM vm) { 
+  assert(vm.gp.type == HObject.V);
+  vm.stack ~= Value.VAddr(vm.gp.vv[arg]);
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
+void apply(VM vm) {
+  assert(vm.stack[$-1].type == Value.Address);
+  assert(vm.stack[$-1].addrData.type == HObject.F);
+  assert(vm.stack[$-1].addrData.fap.type == HObject.V);
+  HObject h = vm.stack[$-1].addrData;
+  vm.stack = vm.stack[0..$-1];
+  vm.gp = h.fgp;
+  vm.pc = h.fcp;
+  foreach(e;h.fap.vv){
+    vm.stack ~= Value.VAddr(e);
+  }
+  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+}
 void eval(VM vm) { 
   assert(vm.stack[$-1].type == Value.Address);
   if(vm.stack[$-1].addrData.type == HObject.C){
@@ -540,70 +787,6 @@ void eval(VM vm) {
     version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
   }
 }
-
-void add(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData + vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-
-void sub(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData - vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void mul(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData * vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void div(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData / vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void leq(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData <= vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void eq(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData == vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void apply(VM vm) {
-  assert(vm.stack[$-1].type == Value.Address);
-  assert(vm.stack[$-1].addrData.type == HObject.F);
-  assert(vm.stack[$-1].addrData.fap.type == HObject.V);
-  HObject h = vm.stack[$-1].addrData;
-  vm.stack = vm.stack[0..$-1];
-  vm.gp = h.fgp;
-  vm.pc = h.fcp;
-  foreach(e;h.fap.vv){
-    vm.stack ~= Value.VAddr(e);
-  }
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
 void update(VM vm) { 
     auto fp = vm.fp ;
     
@@ -624,113 +807,6 @@ void update(VM vm) {
     
     version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
-void halt(VM vm){ 
-  vm.halted = true; 
-}
-
-void neg(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(- vm.stack[$-1].intData);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void not(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(! vm.stack[$-1].intData);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void mod(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData % vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void neq(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData != vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void le(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData < vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void geq(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData >= vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void gr(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData > vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void or(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData || vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void and(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Int);
-  assert(vm.stack[$-1-1].type == Value.Int);
-  vm.stack[$-1-1] = Value.VInt(vm.stack[$-1-1].intData && vm.stack[$-1].intData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void nil(VM vm) { 
-  vm.stack ~= Value.VAddr(new HObject());
-  version(Stats) vm.objects++;
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void cons(VM vm) { 
-  assert(vm.stack[$-1].type == Value.Address);
-  assert(vm.stack[$-2].type == Value.Address);
-  vm.stack[$-2] = Value.VAddr(new HObject(vm.stack[$-2].addrData,vm.stack[$-1].addrData));
-  vm.stack = vm.stack[0..$-1];
-  version(Stats) vm.objects++;
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-
-
-void loadc(int arg, VM vm) { 
-  vm.stack ~= Value.VInt(arg);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void pushloc(int arg, VM vm) { 
-  assert(vm.stack[$-1-arg].type == Value.Address);
-  vm.stack ~= Value.VAddr(vm.stack[$-1-arg].addrData);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void pushglob(int arg, VM vm) { 
-  assert(vm.gp.type == HObject.V);
-  vm.stack ~= Value.VAddr(vm.gp.vv[arg]);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
 void targ(int arg, VM vm) { 
   int g = vm.stack.length-1-vm.fp;
   auto fp = vm.fp;
@@ -763,7 +839,6 @@ void targ(int arg, VM vm) {
     version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
   }
 }
-
 void ret(int arg, VM vm) { 
   auto sp = vm.stack.length-1;
   auto fp = vm.fp;
@@ -799,59 +874,6 @@ void ret(int arg, VM vm) {
   }
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
-void slide(int arg, VM vm) { 
-  vm.stack[$-1-arg] = vm.stack[$-1];
-  vm.stack = vm.stack[0..$-arg];
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void alloc(int arg, VM vm) { 
-  for(int i = 0; i < arg; ++i){
-    vm.stack ~= Value.VAddr(new HObject(-1,cast(HObject)null));
-    version(Stats) vm.objects++;
-  }
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void rewrite(int arg, VM vm) { 
-  assert(vm.stack[$-1-arg].type == Value.Address);
-  assert(vm.stack[$-1].type == Value.Address);
-  vm.stack[$-1-arg].addrData.rewrite(vm.stack[$-1].addrData);
-  vm.stack = vm.stack[0..$-1];
-  version(Stats)  if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void mkvec(int arg, VM vm) {
-  HObject[] arr;
-  foreach(e;vm.stack[$-arg..$]){
-    assert(e.type == Value.Address);
-    arr ~= e.addrData;
-  }
-  vm.stack = vm.stack[0..$-arg];
-  vm.stack ~= Value.VAddr(new HObject(arg,arr));
-  version(Stats) vm.objects++;
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void getvec(int arg, VM vm) { 
-  assert(vm.stack[$-1].type == Value.Address);
-  assert(vm.stack[$-1].addrData.type == HObject.V );
-  HObject o = vm.stack[$-1].addrData;
-  vm.stack = vm.stack[0..$-1];
-  foreach(e;o.vv)
-    vm.stack ~= Value.VAddr(e);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-void get(int arg, VM vm) { 
-  assert(vm.stack[$-1].type == Value.Address);
-  assert(vm.stack[$-1].addrData.type == HObject.V);
-  vm.stack[$-1] = Value.VAddr(vm.stack[$-1].addrData.vv[arg]);
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
-
 void mkclos(int arg, VM vm) { 
   assert(vm.stack[$-1].type == Value.Address);
   assert(vm.stack[$-1].addrData.type == HObject.V);
@@ -859,7 +881,6 @@ void mkclos(int arg, VM vm) {
   version(Stats) vm.objects++;
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
 void mkfunval(int arg, VM vm) { 
   assert(vm.stack[$-1].type == Value.Address);
   assert(vm.stack[$-1].addrData.type == HObject.V);
@@ -868,7 +889,6 @@ void mkfunval(int arg, VM vm) {
   version(Stats) vm.objects++;
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
 void mark(int arg, VM vm) { 
   vm.stack ~= Value.VAddr(vm.gp);
   vm.stack ~= Value.VInt(vm.fp);
@@ -876,7 +896,6 @@ void mark(int arg, VM vm) {
   vm.fp = vm.stack.length-1;
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
 void jumpz(int arg, VM vm) { 
   assert(vm.stack[$-1].type == Value.Int);
   if (vm.stack[$-1].intData == 0)
@@ -884,36 +903,14 @@ void jumpz(int arg, VM vm) {
   vm.stack = vm.stack[0..$-1];
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
 void jump(int arg, VM vm) { 
     vm.pc = arg;
     version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
 }
-
-void tlist(int arg, VM vm) { 
-  assert(vm.stack[$-1].type == Value.Address);
-  
-  if (vm.stack[$-1].addrData.type == HObject.LNil) {
-    vm.stack = vm.stack[0..$-1];
-  } else if (vm.stack[$-1].addrData.type == HObject.LCons) {
-    auto list = vm.stack[$-1].addrData;
-    vm.stack[$-1]  = Value.VAddr(list.lhd);
-    vm.stack      ~= Value.VAddr(list.ltl);
-    vm.pc = arg;
-  } else throw new Error("tlist: not given a list");
-  
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
+unittest{
+  assert((new VM("loadc 32 loadc 10 mkbasic loadc 3 loadc 4 pushloc 2 slide 4 halt")).run(8).bv == 10);
+  assert((new VM("alloc 1 pushloc 0 mkvec 1 mkfunval _u1 jump _u0 _u1: targ 1 pushloc 0 eval getbasic loadc 2 le jumpz _u2 pushloc 0 eval jump _u3 _u2: mark _u4 pushloc 3 mkvec 1 mkclos _u5 jump _u6 _u5: pushglob 0 eval getbasic loadc 1 sub mkbasic update _u6: pushglob 0 eval apply _u4: getbasic mark _u7 pushloc 4 mkvec 1 mkclos _u8 jump _u9 _u8: pushglob 0 eval getbasic loadc 2 sub mkbasic update _u9: pushglob 0 eval apply _u7: getbasic add mkbasic _u3: return 1 _u0: rewrite 1 pushloc 0 mkvec 1 mkclos _u10 jump _u11 _u10: mark _u12 loadc 4 mkbasic pushglob 0 eval apply _u12: update _u11: eval slide 1 halt ")).run(245).bv == 3);
 }
-
-void move(int r, int k, VM vm) { 
-  foreach(i,e;vm.stack[$-k..$]){
-    vm.stack[$-k-r+i] = e;
-  }
-  vm.stack = vm.stack[0..$-r];
-  
-  version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
-}
-
 
 
 

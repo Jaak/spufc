@@ -1,4 +1,10 @@
 Experimental MaMa interpreter
+(report issues to kalmer.apinis@gmail.com)
+
+spec. in the slides:
+http://math.ut.ee/~varmo/TM2008/slides/tm-mama.pdf   and
+http://www2.informatik.tu-muenchen.de/lehre/vorlesungen/SS08/vm/
+
 
 building
 ========
@@ -13,7 +19,8 @@ nostat      disables staistics (implies fast)
 Requires a compiler for D version 1 
 See: http://www.digitalmars.com/d/1.0/
 
-Currently supported compilers: gdc, dmd
+Currently supported compilers: gdc, dmd. Tested on os x, linux and vista.
+
 
 usage
 =====
@@ -32,11 +39,4 @@ Options:
 deviations from spec
 ====================
 
-* invalid pointer is 'null' not -1
-
-todo
-====
-
-* add more test codes
-* test on windows
-* figure out testing framework for the compiler 
+* invalid pointer is 'null' not '-1'
