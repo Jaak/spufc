@@ -4,7 +4,6 @@ module OptMaMa (optimise) where
 
 import MaMa
 
-import Debug.Trace
 import Data.List (delete)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -56,7 +55,7 @@ blockify = loop TopBlock []
 
     dropdead [] = []
     dropdead (LABEL lbl : xs) = loop (NamedBlock lbl) [] xs
-    dropdead (_ : xs) = trace "Found dead code" (dropdead xs)
+    dropdead (_ : xs) = dropdead xs
 
 unblockify :: Block -> [MaMa]
 unblockify block = (unName . loop (basicBlock block) . unTail) []
@@ -109,21 +108,17 @@ buildMap [] = M.empty
 buildMap (x : xs) = M.insert (name x) x (buildMap xs)
 
 mergeBlocks :: Block -> Block -> Block
-mergeBlocks b b' = trace msg $ Block {
+mergeBlocks b b' = Block {
     name = name b,
     basicBlock = basicBlock b' ++ basicBlock b,
     jump = jump b'
   }
-  where
-    msg = "merge: " ++ show (name b) ++ ", " ++ show (name b') 
 
 reorderBlocks :: [Block] -> [Block]
-reorderBlocks blocks = trace msg $ loop (buildMap blocks) (map name blocks)
+reorderBlocks blocks = loop (buildMap blocks) (map name blocks)
   where
     gr :: DepGr
     gr = depGr blocks
-
-    msg = unlines (map show blocks)
 
     loop _ [] = []
     loop m (name : xs) = case M.lookup name m of
