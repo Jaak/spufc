@@ -762,7 +762,7 @@ void apply(VM vm) {
   vm.stack = vm.stack[0..$-1];
   vm.gp = h.fgp;
   vm.pc = h.fcp;
-  foreach(e;h.fap.vv){
+  foreach(e;h.fap.vv.reverse){
     vm.stack ~= Value.VAddr(e);
   }
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
