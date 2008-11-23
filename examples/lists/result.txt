@@ -1,0 +1,6 @@
+examples/lists/./basic1.puf
+1
+examples/lists/./basic2.puf
+10
+examples/lists/./basic3.puf
+120

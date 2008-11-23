@@ -1,0 +1,6 @@
+examples/./fib.puf
+3
+examples/./primes.puf
+24133
+examples/./sumevens.puf
+6

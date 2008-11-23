@@ -339,7 +339,7 @@ class VM {
     // state string
     version(Stats) 
     string stats(){
-      string fs = "Statistics: \njump: \t %d\t\tbasic_ops: \t%d\njumpz: \t %d\t\tother:  \t%d\nmax stack size:    \t%d \nheap objects created: \t%d";
+      string fs = "Statistics: \njump:    \t%d\njumpzs:   \t%d\nbasic_ops: \t%d\nother:   \t%d\nmax stack size:    \t%d \nheap objects created: \t%d";
       string str = format(fs,jumps,basic_op,jumpzs,other,max_stack,objects);
       
       return str;

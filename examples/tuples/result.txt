@@ -1,0 +1,12 @@
+examples/tuples/./basic1.puf
+1
+examples/tuples/./basic2.puf
+3
+examples/tuples/./basic3.puf
+1
+examples/tuples/./basic4.puf
+3
+examples/tuples/./basic5.puf
+3
+examples/tuples/./bug1.puf
+3
