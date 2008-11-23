@@ -17,7 +17,7 @@ do
   esac
 done
 
-if which -s dmd
+if (which dmd > /dev/null) 
 then
   FLAG="-inline -O -of$RESULT" 
 
@@ -28,12 +28,13 @@ then
     3) FLAG="$FLAG -release -version=NoStats" ;;
   esac
   
+  echo "dmd $FLAG main.d"
   dmd $FLAG main.d
   if [ $? ] ; then exit $? ; fi
 fi
 
 
-if which -s gdc 
+if (which gdc > /dev/null) 
 then 
   FLAG="-m32 -finline-functions -O2 -o $RESULT"
 
