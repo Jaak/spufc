@@ -1,0 +1,9 @@
+#include prelude.puf
+
+sieve xs = case xs of
+  [] -> undefined;
+  p : xs -> p : sieve (filter (fn x -> (x % p) /= 0) xs);
+
+primes = sieve (from 2);
+
+main = sum (take 100 primes);

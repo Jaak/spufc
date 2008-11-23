@@ -59,3 +59,11 @@ length xs = letrec
 even n = n % 2 == 0;
 
 odd n = n % 2 == 1;
+
+take n xs = if n <= 0
+  then []
+  else case xs of
+    [] -> [];
+    x : xs -> x : take (n - 1) xs;
+
+from n = n : from (n + 1);
