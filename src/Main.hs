@@ -12,7 +12,6 @@ import CodeGen
 import Parser
 import Pretty
 import DepAnal
-import qualified Eval
 import qualified AST
 import qualified Rename
 import qualified Unique
@@ -80,6 +79,4 @@ main = do
                 putStrLn $ prettyAST $ t'
                 putStrLn "== / ==\n"
               when (mama opt) $ mapM_ print $ codeGen sup t'
-              when (eval opt) $ do
-                case Eval.eval $ t' of
-                  (w, res) -> putStrLn w >> print res
+              when (eval opt) $ return ()

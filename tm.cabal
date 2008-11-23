@@ -24,5 +24,4 @@ Executable tm
                           Parser,
                           Rename,
                           Unique,
-                          Eval,
                           LastCall
