@@ -1,0 +1,82 @@
+		/* 0 */  	alloc 2
+		/* 2 */  	pushloc 1	/* f */
+		/* 3 */  	mkvec 1
+		/* 3 */  	mkfunval _0
+		/* 3 */  	jump _1
+	_0:
+		/* 0 */  	targ 2
+		/* 0 */  	pushloc 1	/* x */
+		/* 1 */  	eval
+		/* 1 */  	getbasic
+		/* 1 */  	loadc 1
+		/* 2 */  	leq
+		/* 1 */  	jumpz _2
+		/* 0 */  	pushloc 0	/* result */
+		/* 1 */  	eval
+		/* 1 */  	jump _3
+	_2:
+		/* 0 */  	mark _4
+		/* 3 */  	pushloc 4	/* x */
+		/* 4 */  	mkvec 1
+		/* 4 */  	mkclos _5
+		/* 4 */  	jump _6
+	_5:
+		/* 0 */  	pushglob 0	/* x */
+		/* 1 */  	eval
+		/* 1 */  	getbasic
+		/* 1 */  	loadc 1
+		/* 2 */  	sub
+		/* 1 */  	mkbasic
+		/* 1 */  	update
+	_6:
+		/* 4 */  	mark _7
+		/* 7 */  	pushloc 7	/* result */
+		/* 8 */  	pushloc 9	/* x */
+		/* 9 */  	mkvec 2
+		/* 8 */  	mkclos _8
+		/* 8 */  	jump _9
+	_8:
+		/* 0 */  	pushglob 1	/* x */
+		/* 1 */  	eval
+		/* 1 */  	getbasic
+		/* 1 */  	pushglob 0	/* result */
+		/* 2 */  	eval
+		/* 2 */  	getbasic
+		/* 2 */  	mul
+		/* 1 */  	mkbasic
+		/* 1 */  	update
+	_9:
+		/* 8 */  	pushglob 0	/* f */
+		/* 9 */  	eval
+		/* 9 */  	apply
+	_7:
+		/* 5 */  	apply
+	_4:
+	_3:
+		/* 1 */  	return 2
+	_1:
+		/* 3 */  	rewrite 2
+		/* 2 */  	pushloc 1	/* f */
+		/* 3 */  	mkvec 1
+		/* 3 */  	mkclos _10
+		/* 3 */  	jump _11
+	_10:
+		/* 0 */  	mark _12
+		/* 3 */  	loadc 1
+		/* 4 */  	mkbasic
+		/* 4 */  	pushglob 0	/* f */
+		/* 5 */  	eval
+		/* 5 */  	apply
+	_12:
+		/* 1 */  	update
+	_11:
+		/* 3 */  	rewrite 1
+		/* 2 */  	mark _13
+		/* 5 */  	loadc 4
+		/* 6 */  	mkbasic
+		/* 6 */  	pushloc 4	/* fac */
+		/* 7 */  	eval
+		/* 7 */  	apply
+	_13:
+		/* 3 */  	slide 2
+		/* 1 */  	halt

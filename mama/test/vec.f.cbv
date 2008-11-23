@@ -1,0 +1,47 @@
+		/* 0 */  	mkvec 0
+		/* 1 */  	mkfunval _0
+		/* 1 */  	jump _1
+	_0:
+		/* 0 */  	targ 3
+		/* 0 */  	mark _2
+		/* 3 */  	pushloc 4	/* x */
+		/* 4 */  	pushloc 6	/* y */
+		/* 5 */  	mkvec 2
+		/* 4 */  	pushloc 4	/* f */
+		/* 5 */  	apply
+	_2:
+		/* 1 */  	return 3
+	_1:
+		/* 1 */  	mkvec 0
+		/* 2 */  	mkfunval _3
+		/* 2 */  	jump _4
+	_3:
+		/* 0 */  	targ 1
+		/* 0 */  	pushloc 0	/* z */
+		/* 1 */  	getvec 2
+		/* 2 */  	pushloc 1	/* x */
+		/* 3 */  	getbasic
+		/* 3 */  	pushloc 1	/* y */
+		/* 4 */  	getbasic
+		/* 4 */  	add
+		/* 3 */  	mkbasic
+		/* 3 */  	slide 2
+		/* 1 */  	return 1
+	_4:
+		/* 2 */  	mark _5
+		/* 5 */  	loadc 2
+		/* 6 */  	mkbasic
+		/* 6 */  	mark _6
+		/* 9 */  	loadc 1
+		/* 10 */  	mkbasic
+		/* 10 */  	mark _7
+		/* 13 */  	pushloc 11	/* add */
+		/* 14 */  	pushloc 13	/* curry */
+		/* 15 */  	apply
+	_7:
+		/* 11 */  	apply
+	_6:
+		/* 7 */  	apply
+	_5:
+		/* 3 */  	slide 2
+		/* 1 */  	halt

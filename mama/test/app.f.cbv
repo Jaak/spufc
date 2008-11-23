@@ -1,0 +1,57 @@
+		/* 0 */  	loadc 1
+		/* 1 */  	mkbasic
+		/* 1 */  	loadc 2
+		/* 2 */  	mkbasic
+		/* 2 */  	loadc 3
+		/* 3 */  	mkbasic
+		/* 3 */  	nil
+		/* 4 */  	cons
+		/* 3 */  	cons
+		/* 2 */  	cons
+		/* 1 */  	loadc 4
+		/* 2 */  	mkbasic
+		/* 2 */  	loadc 5
+		/* 3 */  	mkbasic
+		/* 3 */  	nil
+		/* 4 */  	cons
+		/* 3 */  	cons
+		/* 2 */  	alloc 1
+		/* 3 */  	pushloc 0	/* app */
+		/* 4 */  	mkvec 1
+		/* 4 */  	mkfunval _0
+		/* 4 */  	jump _1
+	_0:
+		/* 0 */  	targ 2
+		/* 0 */  	pushloc 0	/* x */
+		/* 1 */  	tlist _2
+		/* 0 */  	pushloc 1	/* y */
+		/* 1 */  	jump _3
+	_2:
+		/* 2 */  	pushloc 1	/* h */
+		/* 3 */  	mark _4
+		/* 6 */  	pushloc 7	/* y */
+		/* 7 */  	mark _5
+		/* 10 */  	pushloc 8	/* t */
+		/* 11 */  	pushglob 0	/* app */
+		/* 12 */  	apply
+	_5:
+		/* 8 */  	apply
+	_4:
+		/* 4 */  	cons
+		/* 3 */  	slide 2
+	_3:
+		/* 1 */  	return 2
+	_1:
+		/* 1 */  	rewrite 1
+		/* 3 */  	mark _6
+		/* 6 */  	pushloc 4	/* l2 */
+		/* 7 */  	mark _7
+		/* 10 */  	pushloc 9	/* l1 */
+		/* 11 */  	pushloc 8	/* app */
+		/* 12 */  	apply
+	_7:
+		/* 8 */  	apply
+	_6:
+		/* 4 */  	slide 1
+		/* 3 */  	slide 2
+		/* 1 */  	halt

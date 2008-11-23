@@ -1,0 +1,22 @@
+		/* 0 */  	mkvec 0
+		/* 1 */  	mkfunval _0
+		/* 1 */  	jump _1
+	_0:
+		/* 0 */  	targ 1
+		/* 0 */  	pushloc 0	/* x */
+		/* 1 */  	eval
+		/* 1 */  	getbasic
+		/* 1 */  	loadc 7
+		/* 2 */  	add
+		/* 1 */  	mkbasic
+		/* 1 */  	return 1
+	_1:
+		/* 1 */  	mark _2
+		/* 4 */  	loadc 3
+		/* 5 */  	mkbasic
+		/* 5 */  	pushloc 4	/* y */
+		/* 6 */  	eval
+		/* 6 */  	apply
+	_2:
+		/* 2 */  	slide 1
+		/* 1 */  	halt

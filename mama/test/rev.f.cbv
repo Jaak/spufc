@@ -1,0 +1,65 @@
+		/* 0 */  	loadc 1
+		/* 1 */  	mkbasic
+		/* 1 */  	loadc 2
+		/* 2 */  	mkbasic
+		/* 2 */  	loadc 3
+		/* 3 */  	mkbasic
+		/* 3 */  	loadc 4
+		/* 4 */  	mkbasic
+		/* 4 */  	nil
+		/* 5 */  	cons
+		/* 4 */  	cons
+		/* 3 */  	cons
+		/* 2 */  	cons
+		/* 1 */  	mkvec 0
+		/* 2 */  	mkfunval _0
+		/* 2 */  	jump _1
+	_0:
+		/* 0 */  	targ 1
+		/* 0 */  	alloc 1
+		/* 1 */  	pushloc 0	/* r */
+		/* 2 */  	mkvec 1
+		/* 2 */  	mkfunval _2
+		/* 2 */  	jump _3
+	_2:
+		/* 0 */  	targ 2
+		/* 0 */  	pushloc 0	/* x */
+		/* 1 */  	tlist _4
+		/* 0 */  	pushloc 1	/* result */
+		/* 1 */  	jump _5
+	_4:
+		/* 2 */  	mark _6
+		/* 5 */  	pushloc 4	/* h */
+		/* 6 */  	pushloc 7	/* result */
+		/* 7 */  	cons
+		/* 6 */  	mark _7
+		/* 9 */  	pushloc 7	/* t */
+		/* 10 */  	pushglob 0	/* r */
+		/* 11 */  	apply
+	_7:
+		/* 7 */  	apply
+	_6:
+		/* 3 */  	slide 2
+	_5:
+		/* 1 */  	return 2
+	_3:
+		/* 1 */  	rewrite 1
+		/* 1 */  	mark _8
+		/* 4 */  	nil
+		/* 5 */  	mark _9
+		/* 8 */  	pushloc 8	/* list */
+		/* 9 */  	pushloc 8	/* r */
+		/* 10 */  	apply
+	_9:
+		/* 6 */  	apply
+	_8:
+		/* 2 */  	slide 1
+		/* 1 */  	return 1
+	_1:
+		/* 2 */  	mark _10
+		/* 5 */  	pushloc 4	/* test */
+		/* 6 */  	pushloc 4	/* rev */
+		/* 7 */  	apply
+	_10:
+		/* 3 */  	slide 2
+		/* 1 */  	halt

@@ -1,0 +1,32 @@
+test/add.f.cbn
+10
+test/add.f.cbv
+10
+test/add2.f.cbn
+17
+test/add2.f.cbv
+17
+test/app.f.cbn
+1 : Closure(37)
+test/app.f.cbv
+1 : 2 : 3 : 4 : 5 : Nil
+test/fac.f.cbn
+24
+test/fac.f.cbv
+24
+test/fac2.f.cbn
+24
+test/fac2.f.cbv
+24
+test/fib.f.cbn
+5
+test/fib.f.cbv
+5
+test/rev.f.cbn
+4 : 3 : 2 : 1 : Nil
+test/rev.f.cbv
+4 : 3 : 2 : 1 : Nil
+test/vec.f.cbn
+3
+test/vec.f.cbv
+3
