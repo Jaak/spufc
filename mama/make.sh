@@ -56,7 +56,7 @@ then
   esac
   
   echo gdc $FLAG main.d
-  gdc $FLAG main.d 2>1; > /dev/null
+  (gdc $FLAG main.d 2>&1) > /dev/null
 
   if [ $? ] ; then exit $? ; fi
 fi
