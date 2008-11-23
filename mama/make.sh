@@ -1,6 +1,16 @@
 #!/bin/bash
 
-RESULT=mama
+
+EXE=""
+
+if [ -n $WINDIR  ] 
+then 
+  EXE=.exe
+fi
+
+
+RESULT=mama$EXE
+
 
 # proccessing arguments
 FAST=0
@@ -17,7 +27,7 @@ do
   esac
 done
 
-if (which dmd > /dev/null) 
+if (which dmd$EXE > /dev/null) 
 then
   FLAG="-inline -O -of$RESULT" 
 
@@ -28,8 +38,8 @@ then
     3) FLAG="$FLAG -release -version=NoStats" ;;
   esac
   
-  echo "dmd $FLAG main.d"
-  dmd $FLAG main.d
+  echo "dmd$EXE $FLAG main.d"
+  dmd$EXE $FLAG main.d
   if [ $? ] ; then exit $? ; fi
 fi
 
