@@ -3,12 +3,17 @@ Experimental MaMa interpreter
 building
 ========
 
-./make.sh
+./make.sh [options]
+
+Options:
+notest      disables unittests
+fast        disables runtime-typecheks (implies notest)
+nostat      disables staistics (implies fast)
 
 Requires a compiler for D version 1 
 See: http://www.digitalmars.com/d/1.0/
 
-Tested on gdc (mac), but probably works with dmd v1 if you change 'make.sh'.
+Currently supported compilers: gdc, dmd
 
 usage
 =====
@@ -32,8 +37,6 @@ deviations from spec
 todo
 ====
 
-* add test codes
-* write down useful compiling flags
+* add more test codes
 * test on windows
-* get jaak to add '#!env mama' to compiler
 * figure out testing framework for the compiler 
