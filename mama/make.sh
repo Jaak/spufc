@@ -3,7 +3,7 @@
 
 EXE=""
 
-if [ -n $WINDIR  ] 
+if [ -n "$WINDIR"  ] 
 then 
   EXE=.exe
 fi
