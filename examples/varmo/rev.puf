@@ -4,4 +4,8 @@ rev x y = case x of
   [] -> y;
   h : t -> rev t (h : y);
 
+head xs = case xs of
+  [] -> loop;
+  x : xs -> x;
+
 main = head (rev [1,2,3] []);
