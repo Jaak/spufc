@@ -1000,6 +1000,7 @@ void printUsage(){
     writefln("Usage: mama [options] <file.cbn> ");  
     writefln("Options: -v       \t print state and instruction on every step");  
     writefln("         -i       \t print instruction for every step");  
+    version(NoStats)
     writefln("         -s       \t after execution, print statistics ");  
     writefln("         -r       \t only print result (overrides all previous) ");  
     writefln("         -?       \t this text ");  
