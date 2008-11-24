@@ -31,7 +31,10 @@ depAnal (Var x) = Var x
 depAnal (Lit n) = Lit n
 depAnal (Abs xs e) = Abs xs (depAnal e)
 depAnal (App t e es) = App t (depAnal e) (map depAnal es)
-depAnal (LetRec bs e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs e
+depAnal (LetRec bs e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs' e'
+  where
+    e' = depAnal e
+    bs' = map (second depAnal) bs
 depAnal (Let bs e) = Let (map f bs) (depAnal e)
   where
     f (Single x e) = Single x (depAnal e)

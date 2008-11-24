@@ -204,6 +204,7 @@ codev (Case cbody cnil xh xt ccons) = do
   emit (LABEL b)
 
 -- closure stuff
+codec e@(Var x) = getvar x
 codec e@(Abs _ _) = codev e
 codec e@(Lit _) = codev e
 codec e@(MkTuple _) = codev e
