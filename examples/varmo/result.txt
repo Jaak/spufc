@@ -14,6 +14,8 @@ examples/varmo/./basic7.puf
 5
 examples/varmo/./basic8.puf
 8
+examples/varmo/./closure.puf
+7
 examples/varmo/./fact.puf
 120
 examples/varmo/./fibo.puf
