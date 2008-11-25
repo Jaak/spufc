@@ -12,6 +12,7 @@ import CodeGen
 import Parser
 import Pretty
 import DepAnal
+import qualified Inline
 import qualified AST
 import qualified Rename
 import qualified Unique
@@ -20,8 +21,10 @@ import qualified OptMaMa
 
 data Options = Options {
     printHelp :: Bool,
+    mama :: Bool,
     debug :: Bool,
     optMaMa :: Bool,
+    inline :: Bool,
     includePaths :: [FilePath]
   }
   deriving Show
@@ -29,8 +32,10 @@ data Options = Options {
 defaultOpts :: Options
 defaultOpts = Options {
     printHelp = False,
+    mama = True,
     debug = False,
     optMaMa = False,
+    inline = False,
     includePaths = ["."]
   }
 
@@ -39,13 +44,17 @@ optsAddInclude fpath o = o { includePaths = fpath : includePaths o }
 optsEnableHelp o = o { printHelp = True }
 optsEnableDebug o = o { debug = True }
 optsEnableOptMaMa o = o { optMaMa = True }
+optsEnableInline o = o { inline = True }
+optsDisableMaMa o = o { mama = False }
 
 options :: [OptDescr (Options -> Options)]
 options = [
     Option ['h'] ["help"]      (NoArg $ optsEnableHelp)      "Display the help message",
     Option ['I'] ["include"]   (ReqArg optsAddInclude        "DIR") "Include path",
     Option ['g'] ["debug"]     (NoArg $ optsEnableDebug)     "Output some debug info",
-    Option ['O'] ["opt-mama"]  (NoArg $ optsEnableOptMaMa)   "Optimise generated mama code"
+    Option ['O'] ["opt-mama"]  (NoArg $ optsEnableOptMaMa)   "Optimise generated mama code",
+    Option []    ["inline"]    (NoArg $ optsEnableInline)    "Inline some functions",
+    Option []    ["no-mama"]   (NoArg $ optsDisableMaMa)     "Do not output generated code"
   ]
 
 handleOpt :: [FilePath] -> Options -> String -> IO ()
@@ -58,13 +67,17 @@ handleOpt files opt _ = forM_ files $ \file -> do
   case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
     Left err -> putStr $ "Errur: " ++ show err
     Right t -> do
-      let t' = LastCall.detect (depAnal t)
+      let t' = LastCall.detect $
+               (if inline opt then Inline.inline else id) $
+               depAnal t
       when (debug opt) $ do
         putStrLn "\n== Abstract syntax tree =="
         putStrLn $ prettyAST $ t'
         putStrLn "== / ==\n"
-      let f = if optMaMa opt then OptMaMa.optimise else id
-      mapM_ print $ f $ codeGen sup t'
+      when (mama opt) $ do
+        let code = (if optMaMa opt then OptMaMa.optimise else id) $
+                   codeGen sup t'
+        mapM_ print code
 
 main :: IO ()
 main = do

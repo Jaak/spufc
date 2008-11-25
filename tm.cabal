@@ -25,4 +25,5 @@ Executable tm
                           Rename,
                           Unique,
                           LastCall,
-                          OptMaMa
+                          OptMaMa,
+                          Inline
