@@ -3,9 +3,13 @@ module Inline (inline) where
 import Ident
 import AST
 
+import Debug.Trace
 import Prelude hiding (lookup)
 import Data.Map (Map)
 import qualified Data.Map as M
+
+--
+--
 
 newtype OccurTable = OccurTable {
     unOC :: Map Ident Int
@@ -15,6 +19,13 @@ lookup :: OccurTable -> Ident -> Int
 lookup (OccurTable tbl) i = case M.lookup i tbl of
   Just n -> n
   Nothing -> 0
+
+singleton x = OccurTable (M.singleton x 1)
+empty = OccurTable M.empty
+unions = OccurTable . M.unionsWith (+) . map unOC
+
+--
+--
 
 occurs :: AST Ident -> OccurTable
 occurs (Var x) = singleton x
@@ -33,10 +44,6 @@ occurs (Select _ e) = occurs e
 occurs Nil = empty
 occurs (Cons e e') = unions [occurs e, occurs e']
 occurs (Case e1 e2 _ _ e3) = unions [occurs e1, occurs e2, occurs e3]
-
-singleton x = OccurTable (M.singleton x 1)
-empty = OccurTable M.empty
-unions = OccurTable . M.unionsWith (+) . map unOC
 
 replace :: Ident -> AST Ident -> AST Ident -> AST Ident
 replace i e' = loop
@@ -72,9 +79,9 @@ inline ast = loop ast
     loop (Ifte e t f) = Ifte (loop e) (loop t) (loop f)
     loop (Abs xs e) = Abs xs (loop e)
     loop (App t e es) = App t (loop e) (map loop es)
-    loop (Let bs e) = case go (map f bs) (loop e) of
-      Let [] e -> e
-      e -> e
+    loop (Let bs e) = case go (map f bs) e of
+      Let [] e -> loop e
+      Let xs e -> Let xs (loop e)
       where
         f (Single x e) = Single x (loop e)
         f (Tuple xs e) = Tuple xs (loop e)
