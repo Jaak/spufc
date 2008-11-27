@@ -5,6 +5,7 @@ module Ident
 
 import Unique
 import Type
+import Pretty
 
 data Ident = Ident {
     uniq :: Unique,
@@ -20,6 +21,9 @@ instance Ord Ident where
 
 instance Show Ident where
   showsPrec n id = showString (identName id)
+
+instance Pretty Ident where
+  pprint id = pprint (identName id)
 
 identSetType :: Type -> Ident -> Ident
 identSetType ty id = id { identType = Just ty }

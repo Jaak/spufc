@@ -72,7 +72,7 @@ handleOpt files opt _ = forM_ files $ \file -> do
                depAnal t
       when (debug opt) $ do
         putStrLn "\n== Abstract syntax tree =="
-        putStrLn $ prettyAST $ t'
+        putStrLn $ render $ pprint t'
         putStrLn "== / ==\n"
       when (mama opt) $ do
         let code = (if optMaMa opt then OptMaMa.optimise else id) $

@@ -4,15 +4,25 @@ module Unique
    newSupply)
   where
 
+import Pretty
+
 import Control.Monad(liftM)
 import Data.IORef
 import System.IO.Unsafe
 
 newtype Unique = U Int
 
-instance Eq Unique where (U n) == (U m) = n == m
-instance Ord Unique where (U n) `compare` (U m) = n `compare` m
-instance Show Unique where showsPrec n (U u) = showChar 'u' . showsPrec n u
+instance Eq Unique where
+  (U n) == (U m) = n == m
+
+instance Ord Unique where
+  (U n) `compare` (U m) = n `compare` m
+
+instance Show Unique where
+  showsPrec n (U u) = showChar 'u' . showsPrec n u
+
+instance Pretty Unique where
+  pprint (U u) = char 'u' <> pprint u
 
 data Supply = Supply Unique Supply Supply
 
