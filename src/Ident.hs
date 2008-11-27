@@ -1,22 +1,31 @@
 module Ident
-  (Ident, mkIdentFrom, mkIdent, identName)
+  (Ident, mkIdentFrom, mkIdent, identName,
+   identType, identSetType)
   where
 
 import Unique
+import Type
 
-data Ident = Ident String Unique
+data Ident = Ident {
+    uniq :: Unique,
+    identName :: String,
+    identType :: Maybe Type
+  }
 
-instance Eq Ident where Ident _ n == Ident _ m = n == m
-instance Ord Ident where compare (Ident _ n) (Ident _ m) = compare n m
+instance Eq Ident where
+  id == id' = uniq id == uniq id'
+
+instance Ord Ident where
+  compare id id' = compare (uniq id) (uniq id')
 
 instance Show Ident where
-  showsPrec n (Ident name k) = showString name
+  showsPrec n id = showString (identName id)
 
-identName :: Ident -> String
-identName (Ident name _) = name
+identSetType :: Type -> Ident -> Ident
+identSetType ty id = id { identType = Just ty }
 
 mkIdent :: Unique -> Ident
 mkIdent = mkIdentFrom "_"
 
 mkIdentFrom :: String -> Unique -> Ident
-mkIdentFrom = Ident
+mkIdentFrom name u = Ident u name Nothing
