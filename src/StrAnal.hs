@@ -1,6 +1,7 @@
 import Prelude hiding (lookup)
 import Ident
 import AST
+import Type
 
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -11,7 +12,7 @@ data Demand
 
 data AbsVal
   = Top
-  | Fun (AbsVal -> AbsVal) -- we need to have the function type here
+  | Fun Type (AbsVal -> AbsVal) -- we need to have the function type here
   | ApproxFun [Demand] AbsVal
   | Prod [AbsVal]
   | Bot
@@ -20,13 +21,13 @@ anyBot :: AbsVal -> Bool
 anyBot Bot = True
 anyBot Top = False
 anyBot (Prod vs) = any anyBot vs
-anyBot (Fun f) = anyBot (f Top)
+anyBot (Fun _ f) = anyBot (f Top)
 anyBot (ApproxFun _ val)    = anyBot val
 
 absApply :: AbsVal -> AbsVal -> AbsVal
 absApply Bot _ = Bot
 absApply Top _ = Top
-absApply (Fun f) x = f x
+absApply (Fun _ f) x = f x
 absApply (ApproxFun (d : ds) v) x = case ds of
   [] -> val'
   _  -> ApproxFun ds val'
@@ -49,7 +50,7 @@ glb v v'
       then Top
       else Bot
   where
-    isFun (Fun _) = True
+    isFun (Fun _ _) = True
     isFun (ApproxFun _ _) = True
     isFun _ = False
 glb Top v = v
@@ -79,12 +80,12 @@ absEval (Ifte e t f) env =  absEval e env `lub` (absEval t env `glb` absEval f e
 absEval (Abs xs e) env = loop xs env
   where
     loop [] env = absEval e env
-    loop (x : xs) env = Fun (\v -> loop xs (insert x v env))
+    loop (x : xs) env = Fun undefined (\v -> loop xs (insert x v env))
 absEval (App _ e es) env = loop (absEval e env) (map (\e -> absEval e env) es)
   where
     loop v [] = v
-    loop (Fun f) (v : vs) = loop (f v) vs
-    loop _ _ = error "shit happend in absEvalness analysis"
+    loop (Fun _ f) (v : vs) = loop (f v) vs
+    loop _ _ = error "shit happend in strictness analysis"
 absEval (Let bs e) env = absEval e (loop bs env)
   where
     loop [] env = env
@@ -92,13 +93,11 @@ absEval (Let bs e) env = absEval e (loop bs env)
     loop (Tuple xs e : es) env = case absEval e env of
       Prod vs | length vs == length xs -> loop es (insertMany (zip xs vs) env)
       _ -> error "oops, type error"
-absEval (LetRec bs e) env = absEval e env' -- (loop bs env)
+absEval (LetRec bs e) env = absEval e env'
   where
     (binders, rhss) = unzip bs
     strrhss = fix binders rhss env
     env' = insertMany (zip binders strrhss) env
-    -- (\env' -> 
-    --  insertMany (map (\(x, e) -> (x, widen $ absEval e env')) bs) env)
 absEval (Builtin _ es) env = foldr lub Bot $ map (\e -> absEval e env) es
 absEval (MkTuple es) env = Prod $ map (\e -> absEval e env) es
 absEval (Select i e) env = case absEval e env of
@@ -112,7 +111,7 @@ absEval (Case cbody cnil _ _ ccons) env =
 
 -- TODO
 widen :: AbsVal -> AbsVal
-widen f@(Fun _) = case widenBody of
+widen f@(Fun _ _) = case widenBody of
   ApproxFun ds val -> let
       d = undefined
     in ApproxFun (d : ds) val
