@@ -23,7 +23,11 @@ instance Show Ident where
   showsPrec n id = showString (identName id)
 
 instance Pretty Ident where
-  pprint id = pprint (identName id)
+  pprint id = case identType id of
+    Nothing -> name
+    Just ty -> parens (name <+> colon <> colon <+> pprint ty)
+    where
+      name = pprint (identName id)
 
 identSetType :: Type -> Ident -> Ident
 identSetType ty id = id { identType = Just ty }
