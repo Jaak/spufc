@@ -22,35 +22,11 @@ rn (Var x) = do
   case M.lookup x env of
     Nothing -> throwRn (FreeVariable x)
     Just id -> return (Var id)
-rn (Abs xs e) = do
-  (xs', e') <- loop xs
-  return $ Abs xs' e'
-  where
-    loop [] = do
-      e' <- rn e
-      return ([], e')
-    loop (x : xs) = do
-      id <- renameVar x
-      (ids, e) <- insertEnv x id (loop xs)
-      return (id : ids, e)
-rn (Let bs e) = do
-  (bs', e') <- loop bs
-  return (Let bs' e')
-  where
-    loop [] = do
-      e' <- rn e
-      return ([], e')
-    loop (Single x e : bs) = do
-      id <- renameVar x 
-      ne <- rn e
-      (nes, e) <- insertEnv x id (loop bs)
-      return (Single id ne : nes, e)
-    loop (Tuple xs e : bs) = do
-      ids <- mapM renameVar xs
-      ne <- rn e
-      (nes, e) <- foldr (uncurry insertEnv) (loop bs) (zip xs ids)
-      return (Tuple ids ne : nes, e)
-rn (LetRec bs e) = do
+rn (Abs x e) = do
+  id <- renameVar x
+  e' <- insertEnv x id (rn e)
+  return $ Abs id e'
+rn (Let (Rec bs) e) = do
   xs <- forM bs $ \(x, e') -> do
     id <- renameVar x 
     return (x, id)
@@ -61,13 +37,23 @@ rn (LetRec bs e) = do
       return (id, e')
   bs' <- zipWithM step xs bs
   e' <- rn' e
-  return (LetRec bs' e')
+  return (Let (Rec bs') e')
+rn (Let (Single x e) e0) = do
+  id <- renameVar x
+  e' <- rn e
+  e0' <- insertEnv x id (rn e0)
+  return $ Let (Single id e') e0'
+rn (Let (Tuple xs e) e0) = do
+  ids <- mapM renameVar xs
+  e' <- rn e
+  e0' <- foldr (uncurry insertEnv) (rn e0) (zip xs ids)
+  return $ Let (Tuple ids e') e0'
 rn (Lit n) = return (Lit n)
 rn (Ifte e t f) = liftM3 Ifte (rn e) (rn t) (rn f)
-rn (App t e es) = do
-  e' <- rn e
-  e's <- mapM rn es
-  return $ App t e' e's
+rn (App t e0 e1) = do
+  e0' <- rn e0
+  e1' <- rn e1
+  return $ App t e0' e1'
 rn (Builtin bi es) = do
   es' <- mapM rn es
   return $ Builtin bi es'

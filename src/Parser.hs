@@ -31,7 +31,7 @@ convertTokens includes = loop
                         rest <- loop f  xs
                         return $ ex ++ rest
 
-parseFile :: [FilePath] -> FilePath -> IO [AST.Binding String]
+parseFile :: [FilePath] -> FilePath -> IO (AST.Bind String)
 parseFile includes fp = fmap PP.parseFile $ rawTokens fp >>= convertTokens includes fp
 
 expr_tokens :: [PT.RawToken] -> Either String [(PT.Token,PT.Pos,FilePath)]

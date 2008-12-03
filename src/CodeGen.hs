@@ -10,9 +10,6 @@ import MaMa
 import qualified Env
 import Fvs (fvList)
 
--- each builtin must correspond to some MaMa instruction
--- well we could generalise this with:
---  builtin :: Builtin -> [MaMa]
 builtin :: Builtin -> Cg ()
 builtin UNeg = emit NEG
 builtin UNot = emit NOT
@@ -77,12 +74,13 @@ codev (Ifte e t f) = do
 codev (Var x) = do
   getvar x
   emit EVAL
-codev (Abs xs e) = do
+codev e0@(Abs _ _) = do
+  let (xs, e) = collectAbs e0
   a <- newLabel
   b <- newLabel
   sd <- askSd
   let
-    zs = fvList (Abs xs e)
+    zs = fvList e0
     k = length xs
     g = length zs
     env' = Env.fromList $
@@ -99,26 +97,31 @@ codev (Abs xs e) = do
   emits [
     RETURN k,
     LABEL b]
-codev (App RegularCall e es) = do
-  a <- newLabel
+codev e0@(App _ _ _) = do
+  let (t, e, es) = collectApp e0
+  case t of
+    RegularCall -> codevRegularApp e es
+    LastCall k -> codevLastApp k e es
+codev (Let (Rec bs) e) = do
   sd <- askSd
-  let m = length es
-  emit (MARK a)
-  zipWithM_ (\sd' -> withSd sd' . codec) [sd + 3 ..] (reverse es)
-  withSd (sd + m + 3) $ codev e
-  emits [
-    APPLY,
-    LABEL a]
-codev (App (LastCall k) e es) = do
-  sd <- askSd
-  let m = length es
-      step e' i = withSd (sd + i) $ codec e'
-  zipWithM_ step (reverse es) [0..]
-  withSd (sd + m) $ codev e
-  emit $ MOVE (sd + k) (m + 1)
-  emit APPLY
-codev (Let bs e) = do
+  env <- askEnv
   let
+    n = length bs
+    (ys, es) = unzip bs
+    insert' = uncurry Env.insert
+    env' = foldr insert' env $ zip ys (map Env.Local [sd + 1..])
+  emit (ALLOC n)
+  withSd (sd + n) $ withEnv env' $ do
+    forM_ (zip es [n, n-1 ..]) $ \(e', i) -> do
+      codec e'
+      emit (REWRITE i)
+    codev e
+  emit (SLIDE n)
+-- non-rec case
+codev e0@(Let _ _) = do
+  let
+    (bs, e) = collectLet e0
+
     loop j [] = do
       codev e
       emit (SLIDE (j-1))
@@ -136,39 +139,6 @@ codev (Let bs e) = do
           emit (GETVEC k)
           withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop (j + k) bs
   loop 1 bs
---    loop [] = codev e
---    loop (Single x e' : bs) = do
---      sd <- askSd
---      env <- askEnv
---      codec e'
---      withSd (sd + 1) $ withEnv (Env.insert x (Env.Local (sd + 1)) env) $ loop bs
---      emit (SLIDE 1)
---    loop (Tuple xs e' : bs) = do
---      sd <- askSd
---      env <- askEnv
---      let k = length xs
---          insert' = uncurry Env.insert
---      codev e'
---      emit (GETVEC k)
---      withSd (sd + k) $ withEnv (foldr insert' env (zip xs (map Env.Local [sd + 1..]))) $ loop bs
---      emit (SLIDE k)
---  loop bs
-
-codev (LetRec bs e) = do
-  sd <- askSd
-  env <- askEnv
-  let
-    n = length bs
-    (ys, es) = unzip bs
-    insert' = uncurry Env.insert
-    env' = foldr insert' env $ zip ys (map Env.Local [sd + 1..])
-  emit (ALLOC n)
-  withSd (sd + n) $ withEnv env' $ do
-    forM_ (zip es [n, n-1 ..]) $ \(e', i) -> do
-      codec e'
-      emit (REWRITE i)
-    codev e
-  emit (SLIDE n)
 codev (MkTuple es) = do
   emit (COMMENT "<tuple>")
   let k = length es
@@ -239,3 +209,23 @@ getvar x = do
       sd <- askSd
       emit (PUSHLOC (sd - i))
     Env.Global i -> emit (PUSHGLOB i)
+
+codevRegularApp e es = do
+  a <- newLabel
+  sd <- askSd
+  let m = length es
+  emit (MARK a)
+  zipWithM_ (\sd' -> withSd sd' . codec) [sd + 3 ..] (reverse es)
+  withSd (sd + m + 3) $ codev e
+  emits [
+    APPLY,
+    LABEL a]
+
+codevLastApp k e es = do
+  sd <- askSd
+  let m = length es
+      step e' i = withSd (sd + i) $ codec e'
+  zipWithM_ step (reverse es) [0..]
+  withSd (sd + m) $ codev e
+  emit $ MOVE (sd + k) (m + 1)
+  emit APPLY

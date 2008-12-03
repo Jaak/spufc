@@ -64,7 +64,7 @@ handleOpt files opt _ = forM_ files $ \file -> do
     putStrLn $ "== " ++ file ++ " =="
   bs <- parseFile (includePaths opt) file
   sup <- Unique.newSupply
-  case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
+  case Rename.rename sup $ AST.Let bs (AST.Var "main") of
     Left err -> putStr $ "Errur: " ++ show err
     Right t -> do
       let t' = LastCall.detect $

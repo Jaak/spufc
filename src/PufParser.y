@@ -50,25 +50,25 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
   ']'      { (BracketRight ,_,_)}
 %%
 
-parse :: { [AST.Binding Name] }
-  : program  { $1 } 
+parse :: { AST.Bind Name }
+  : program  { AST.Rec $1 } 
 
-program :: { [AST.Binding Name] }
+program :: { [(Name, AST.AST Name)] }
   :                   {         [] }
   | program rdecl     { $1 ++ [$2] }
   
-rdecl :: { (AST.Binding Name) }
-  : id flhs '=' expr ';' { ($1, case $2 of [] -> $4 ; xs -> AST.Abs xs $4) }
+rdecl :: { (Name, AST.AST Name) }
+  : id flhs '=' expr ';' { ($1, case $2 of [] -> $4 ; xs -> AST.mkAbs xs $4) }
 
-rdecl_s :: { [AST.Binding Name] }
+rdecl_s :: { [(Name, AST.AST Name)] }
   :               {         [] }
   | rdecl_s rdecl { $1 ++ [$2] }
   
-ldecl :: { (AST.Decl Name) }
-  : id flhs '=' expr ';' { AST.Single $1 $ case $2 of [] -> $4 ; xs -> AST.Abs xs $4 }
+ldecl :: { AST.Bind Name }
+  : id flhs '=' expr ';' { AST.Single $1 $ case $2 of [] -> $4 ; xs -> AST.mkAbs xs $4 }
   | tlhs    '=' expr ';' { AST.Tuple  $1 $3 }
 
-ldecl_s :: { [AST.Decl Name] }
+ldecl_s :: { [AST.Bind Name] }
   :               {         [] }
   | ldecl_s ldecl { $1 ++ [$2] }
 
@@ -104,10 +104,7 @@ expr_uop :: { AST.AST Name }
   : uop expr_uop               { AST.Builtin $1 [$2] }
   | '#' lit expr_uop          { AST.Select $2 $3 }
   | expr_pr                   { $1 }
-  | expr_uop expr_pr          { case ($1) of 
-                                  AST.App _ a b -> AST.App AST.RegularCall a (b++[$2])
-                                  e             -> AST.App AST.RegularCall e [$2]
-                              }
+  | expr_uop expr_pr          { AST.App AST.RegularCall $1 $2 }
 
 expr_mul :: { AST.AST Name }
   : expr_mul bop_mul expr_uop { AST.Builtin $2 [$1,$3] } 
@@ -140,9 +137,9 @@ expr_or :: { AST.AST Name }
 expr :: { AST.AST Name }
   : expr_or                     { $1 }
   | if expr then expr else expr { AST.Ifte $2 $4 $6 }
-  | fn id id_s '->' expr        { AST.Abs    ($2:$3) $5 }
-  | let ldecl ldecl_s in expr   { AST.Let    ($2:$3) $5 }
-  | letrec rdecl rdecl_s in expr{ AST.LetRec ($2:$3) $5 }
+  | fn id id_s '->' expr        { AST.mkAbs    ($2:$3) $5 }
+  | let ldecl ldecl_s in expr   { AST.mkLet    ($2:$3) $5 }
+  | letrec rdecl rdecl_s in expr{ AST.Let (AST.Rec ($2:$3)) $5 }
   | case expr of 
       '[' ']'   '->' expr ';' 
       id ':' id '->' expr       { AST.Case $2 $7 $9 $11 $13 }
@@ -182,7 +179,7 @@ happyError ((x,(_,l,c),f):_) = error (show f ++ ":" ++ show l ++ ":" ++ show c +
 parseExpr :: [(Token,Pos,FilePath)] -> AST.AST Name
 parseExpr = expr
 
-parseFile :: [(Token,Pos,FilePath)] -> [AST.Binding Name]
+parseFile :: [(Token,Pos,FilePath)] -> AST.Bind Name
 parseFile = parse
 
 }

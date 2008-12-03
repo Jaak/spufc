@@ -16,14 +16,11 @@ fvs :: Ord a => AST a -> Set a
 fvs (Var x) = S.singleton x
 fvs (Lit _) = S.empty
 fvs (Ifte e t f) = S.unions $ map fvs [e, t, f]
-fvs (Abs xs e) = fvs e \\\ xs
-fvs (App _ e es) = S.unions $ map fvs (e : es)
-fvs (Let bs e) = loop bs
-  where
-    loop [] = fvs e
-    loop (Single x e' : bs) = fvs e' `S.union` S.delete x (loop bs)
-    loop (Tuple xs e' : bs) = fvs e' `S.union` (loop bs \\\ xs)
-fvs (LetRec bs e) = S.unions (fvs e : ss) \\\ xs'
+fvs (Abs x e) = S.delete x (fvs e)
+fvs (App _ e e') = fvs e `S.union` fvs e'
+fvs (Let (Single x e) e0) = fvs e `S.union` S.delete x (fvs e0)
+fvs (Let (Tuple xs e) e0) = fvs e `S.union` (fvs e0 \\\ xs)
+fvs (Let (Rec bs) e) = S.unions (fvs e : ss) \\\ xs'
   where
     (xs', ss) = unzip [(x, fvs e') | (x, e') <- bs]
 fvs (Builtin _ es) = S.unions $ map fvs es
