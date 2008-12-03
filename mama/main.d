@@ -762,7 +762,7 @@ void apply(VM vm) {
   vm.stack = vm.stack[0..$-1];
   vm.gp = h.fgp;
   vm.pc = h.fcp;
-  foreach(e;h.fap.vv.reverse){
+  foreach(e;h.fap.vv){
     vm.stack ~= Value.VAddr(e);
   }
   version(Stats) if (vm.max_stack < vm.stack.length) vm.max_stack = vm.stack.length;
@@ -813,7 +813,7 @@ void targ(int arg, VM vm) {
   if (g < arg){
     // mkvec0
     HObject[] arr = new HObject[g]; 
-    foreach(i,e;vm.stack[$-g..$].reverse){
+    foreach(i,e;vm.stack[$-g..$]){
       assert(e.type == Value.Address);
       arr[i] = e.addrData;
     }
