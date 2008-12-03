@@ -1,16 +1,13 @@
 module Ident
-  (Ident, mkIdentFrom, mkIdent, identName,
-   identType, identSetType)
+  (Ident, mkIdentFrom, mkIdent, identName)
   where
 
 import Unique
-import Type
 import Pretty
 
 data Ident = Ident {
     uniq :: Unique,
-    identName :: String,
-    identType :: Maybe Type
+    identName :: String
   }
 
 instance Eq Ident where
@@ -23,17 +20,10 @@ instance Show Ident where
   showsPrec n id = showString (identName id)
 
 instance Pretty Ident where
-  pprint id = case identType id of
-    Nothing -> name
-    Just ty -> parens (name <+> colon <> colon <+> pprint ty)
-    where
-      name = pprint (identName id)
-
-identSetType :: Type -> Ident -> Ident
-identSetType ty id = id { identType = Just ty }
+  pprint id = pprint (identName id)
 
 mkIdent :: Unique -> Ident
 mkIdent = mkIdentFrom "_"
 
 mkIdentFrom :: String -> Unique -> Ident
-mkIdentFrom name u = Ident u name Nothing
+mkIdentFrom name u = Ident u name
