@@ -29,16 +29,14 @@ nodeFvs (Node _ _ s) = s
 depAnal :: AST Ident -> AST Ident
 depAnal (Var x) = Var x
 depAnal (Lit n) = Lit n
-depAnal (Abs xs e) = Abs xs (depAnal e)
-depAnal (App t e es) = App t (depAnal e) (map depAnal es)
-depAnal (LetRec bs e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs' e'
+depAnal (Abs x e) = Abs x (depAnal e)
+depAnal (App t e e') = App t (depAnal e) (depAnal e')
+depAnal (Let (Rec bs) e) = toAST . topsort' . toStrong . rmUnreachable $ mkDepGraph bs' e'
   where
     e' = depAnal e
     bs' = map (second depAnal) bs
-depAnal (Let bs e) = Let (map f bs) (depAnal e)
-  where
-    f (Single x e) = Single x (depAnal e)
-    f (Tuple xs e) = Tuple xs (depAnal e)
+depAnal (Let (Single x e) e0) = Let (Single x (depAnal e)) (depAnal e0)
+depAnal (Let (Tuple xs e) e0) = Let (Tuple xs (depAnal e)) (depAnal e0)
 depAnal (Ifte e t f) = Ifte (depAnal e) (depAnal t) (depAnal f)
 depAnal (Builtin bi es) = Builtin bi (map depAnal es)
 depAnal (MkTuple es) = MkTuple (map depAnal es)
@@ -50,7 +48,7 @@ depAnal (Case cbody cnil xt xh ccons) =
 
 -- edges are backwards because we want to remove nodes that are
 -- not reachable from |e|.
-mkDepGraph :: [Binding Ident] -> AST Ident -> Gr DANode ()
+mkDepGraph :: [(Ident, AST Ident)] -> AST Ident -> Gr DANode ()
 mkDepGraph bs e = graph
   where
     univ = S.fromList $ map fst bs
@@ -78,13 +76,13 @@ rmUnreachable g = delNodes (ns \\ rs) g
 toAST :: [[DANode]] -> AST Ident
 toAST [[Root e _]] = e
 toAST nss = case collectNonrec nss of
-  ([], ns : nss) -> LetRec (map nodeToBind ns) (toAST nss)
-  (ns, nss) -> Let (map nodeToDecl ns) (toAST nss)
+  ([], ns : nss) -> Let (Rec $ map nodeToBind ns) (toAST nss)
+  (ns, nss) -> mkLet (map nodeToDecl ns) (toAST nss)
 
-nodeToBind :: DANode -> Binding Ident
+nodeToBind :: DANode -> (Ident, AST Ident)
 nodeToBind (Node x e _) = (x, e)
 
-nodeToDecl :: DANode -> Decl Ident
+nodeToDecl :: DANode -> Bind Ident
 nodeToDecl (Node x e _) = Single x e
 
 collectNonrec :: [[DANode]] -> ([DANode], [[DANode]])
