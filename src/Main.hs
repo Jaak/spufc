@@ -64,7 +64,7 @@ handleOpt files opt _ = forM_ files $ \file -> do
     putStrLn $ "== " ++ file ++ " =="
   bs <- parseFile (includePaths opt) file
   sup <- Unique.newSupply
-  case Rename.rename sup $ AST.LetRec bs (AST.Var "main") of
+  case Rename.rename sup $ AST.Let bs (AST.Var "main") of
     Left err -> putStr $ "Errur: " ++ show err
     Right t -> do
       let t' = LastCall.detect $
@@ -72,7 +72,7 @@ handleOpt files opt _ = forM_ files $ \file -> do
                depAnal t
       when (debug opt) $ do
         putStrLn "\n== Abstract syntax tree =="
-        putStrLn $ prettyAST $ t'
+        putStrLn $ render $ pprint t'
         putStrLn "== / ==\n"
       when (mama opt) $ do
         let code = (if optMaMa opt then OptMaMa.optimise else id) $

@@ -3,20 +3,27 @@ module Ident
   where
 
 import Unique
+import Pretty
 
-data Ident = Ident String Unique
+data Ident = Ident {
+    uniq :: Unique,
+    identName :: String
+  }
 
-instance Eq Ident where Ident _ n == Ident _ m = n == m
-instance Ord Ident where compare (Ident _ n) (Ident _ m) = compare n m
+instance Eq Ident where
+  id == id' = uniq id == uniq id'
+
+instance Ord Ident where
+  compare id id' = compare (uniq id) (uniq id')
 
 instance Show Ident where
-  showsPrec n (Ident name k) = showString name
+  showsPrec n id = showString (identName id)
 
-identName :: Ident -> String
-identName (Ident name _) = name
+instance Pretty Ident where
+  pprint id = pprint (identName id)
 
 mkIdent :: Unique -> Ident
 mkIdent = mkIdentFrom "_"
 
 mkIdentFrom :: String -> Unique -> Ident
-mkIdentFrom = Ident
+mkIdentFrom name u = Ident u name

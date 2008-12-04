@@ -32,12 +32,10 @@ occurs (Var x) = singleton x
 occurs (Lit _) = empty
 occurs (Ifte e t f) = unions [occurs e, occurs t, occurs f]
 occurs (Abs _ e) = occurs e
-occurs (App _ e es) = unions (map occurs (e : es))
-occurs (Let bs e) = unions (map occurs (e : map rhs bs))
-  where
-    rhs (Single _ e) = e
-    rhs (Tuple _ e) = e
-occurs (LetRec bs e) = unions (map occurs (e : map snd bs))
+occurs (App _ e e') = unions [occurs e, occurs e']
+occurs (Let (Rec bs) e) = unions (map occurs (e : map snd bs))
+occurs (Let (Single x e) e0) = unions [occurs e, occurs e0]
+occurs (Let (Tuple xs e) e0) = unions [occurs e, occurs e0]
 occurs (Builtin _ es) = unions (map occurs es)
 occurs (MkTuple es) = unions (map occurs es)
 occurs (Select _ e) = occurs e
@@ -53,14 +51,10 @@ replace i e' = loop
     loop (Lit x) = Lit x
     loop (Ifte e t f) = Ifte (loop e) (loop t) (loop f)
     loop (Abs xs e) = Abs xs (loop e)
-    loop (App t e es) = App t (loop e) (map loop es)
-    loop (Let bs e) = Let (map f bs) (loop e)
-      where
-        f (Single x e) = Single x (loop e)
-        f (Tuple xs e) = Tuple xs (loop e)
-    loop (LetRec bs e) = LetRec (map f bs) (loop e)
-      where
-        f (x, e) = (x, loop e)
+    loop (App t e e') = App t (loop e) (loop e')
+    loop (Let (Single x e) e0) = Let (Single x (loop e)) (loop e0)
+    loop (Let (Tuple xs e) e0) = Let (Tuple xs (loop e)) (loop e0)
+    loop (Let (Rec bs) e) = Let (Rec [(x, loop e) | (x, e) <- bs]) (loop e)
     loop (Builtin bi es) = Builtin bi (map loop es)
     loop (MkTuple es) = MkTuple (map loop es)
     loop (Select i e) = Select i (loop e)
@@ -78,16 +72,12 @@ inline ast = loop ast
     loop (Lit x) = Lit x
     loop (Ifte e t f) = Ifte (loop e) (loop t) (loop f)
     loop (Abs xs e) = Abs xs (loop e)
-    loop (App t e es) = App t (loop e) (map loop es)
-    loop (Let bs e) = case go (map f bs) e of
-      Let [] e -> loop e
-      Let xs e -> Let xs (loop e)
-      where
-        f (Single x e) = Single x (loop e)
-        f (Tuple xs e) = Tuple xs (loop e)
-    loop (LetRec bs e) = LetRec (map f bs) (loop e)
-      where
-        f (x, e) = (x, loop e)
+    loop (App t e e') = App t (loop e) (loop e')
+    loop (Let (Single x e) e0)
+      | tbl `lookup` x == 1 = loop (replace x e e0)
+      | otherwise = Let (Single x e) (loop e0)
+    loop (Let (Tuple xs e) e0) = Let (Tuple xs e) (loop e0)
+    loop (Let (Rec bs) e) = Let (Rec [(x, loop e) | (x, e) <- bs]) (loop e)
     loop (Builtin bi es) = Builtin bi (map loop es)
     loop (MkTuple es) = MkTuple (map loop es)
     loop (Select i e) = Select i (loop e)
@@ -95,10 +85,3 @@ inline ast = loop ast
     loop (Cons e e') = Cons (loop e) (loop e')
     loop (Case cbody cnil xh xt ccons) =
       Case (loop cbody) (loop cnil) xh xt (loop ccons)
-
-    go [] e = Let [] e
-    go (Single x e' : bs) e
-      | tbl `lookup` x == 1 = replace x e' (go bs e)
-    go (b : bs) e = let
-        Let bs' e' = go bs e
-      in Let (b : bs') e'
