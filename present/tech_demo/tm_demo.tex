@@ -10,6 +10,7 @@
 \usefonttheme[onlymath]{serif}
 \usepackage{eulervm}
 \usepackage[scaled]{helvet}
+\usepackage{multirow}
 \setbeamertemplate{navigation symbols}{}
 %\setbeamercovered{dynamic}
 \usepackage[english]{babel}
@@ -71,16 +72,48 @@
   \frametitle{Optimizations done}
   \begin{itemize}
     \item tail call optimization
-    \item closure optimization (slides)
+    \item closure optimization
     \item dead code elimination in dependency analysis
     \item {\it "spaghetti code"} elimination
     \item simple code inlining
   \end{itemize}
 \end{frame}
 
+%\begin{frame}
+%  \frametitle{Results -- gdc.puf}
+%  \begin{center}
+%    \begin{tabular}{|c|c|c|c|}
+%      \hline
+%                    & \multicolumn{2}{|c|}{instructions} & max \\
+%      \cline{2-4}
+%      opt           & jumps   & other    & stack  \\ \hline
+%                    & $7$     & $166$    & $39$   \\
+%        --opt-mama  & $2$     & $166$    & $38$   \\
+%        --last-call & $6$     & $162$    & $18$   \\
+%        --inline    & $6$     & $159$    & $33$   \\
+%        all         & $1$     & $155$    & $13$ \\
+%      \hline
+%    \end{tabular}
+%  \end{center}
+%\end{frame}
+
+
 \begin{frame}
-  \frametitle{Results}
-  tabular
+  \frametitle{Results -- demo.puf}
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|}
+      \hline
+                    & \multicolumn{2}{|c|}{instructions} & max \\
+      \cline{2-4}
+      compiler flags& jumps   & other    & stack  \\ \hline
+                    & $500k$  & $15.9M$  & $7993$ \\
+        --opt-mama  & $249k$  & $16.0M$  & $7993$ \\
+        --last-call & $255k$  & $14.8M$  & $4008$ \\
+        --inline    & $503k$  & $15.9M$  & $7984$ \\
+        all         &   $3k$  & $14.8M$  & $3999$ \\
+      \hline
+    \end{tabular}
+  \end{center}
 \end{frame}
 
 \end{document}
