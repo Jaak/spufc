@@ -1,0 +1,96 @@
+\documentclass[14pt,xcolor=svgnames]{beamer}
+\usetheme{Boadilla}
+\useinnertheme{circles} 
+\useoutertheme{infolines}
+\usenavigationsymbolstemplate{}
+\bibliographystyle{plain}
+%\usetheme{Singapore}
+%\usecolortheme{rose}
+%\useinnertheme[shadow=true]{rounded}
+\usefonttheme[onlymath]{serif}
+\usepackage{eulervm}
+\usepackage[scaled]{helvet}
+\setbeamertemplate{navigation symbols}{}
+%\setbeamercovered{dynamic}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,stmaryrd,xcolor,multicol}
+
+
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{
+%	\vspace*{2.5mm}
+%	\hspace*{2.5mm}
+%	{Technische Universit\"at M\"unchen}
+  \vspace*{1mm}
+	\hspace*{2.5mm}
+  \includegraphics[scale=0.4]{ut_logo.pdf}
+	\hfill
+	
+	\vspace*{0mm}
+	\color[cmyk]{0.771,0.550,0,0.451}{\rule{15cm}{0.1mm}}
+}
+
+
+\title[Tech Demo]{Intermediate project presentation \\ \small Compiler Construction MTAT.03.102}
+\author{Jaak Randmets $\&$ Kalmer Apinis}
+\institute[UT]{
+  Department of Computer Science\\
+  University of Tartu}
+\date{}
+
+\begin{document}
+
+%\logo{\includegraphics[height=0.6cm]{ut_logo.pdf}}
+
+\maketitle
+
+\begin{frame}
+  \frametitle{Overview}
+  \begin{itemize}
+    \item language: Haskell (GHC 6.8)
+    \item lexer \& scanner: Alex, Happy
+    \item various libraries such as bytestring and fgl
+    \item git as Revision Control System
+    \item about 2k lines of code (80 lines of comments)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{mama interpreter}
+  \begin{itemize}
+    \item language: D version 1
+    \item about 1k lines of code
+    \item quite a bit faster than VAM
+    \item generates run-time statistics
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Optimizations done}
+  \begin{itemize}
+    \item tail call optimization
+    \item closure optimization (slides)
+    \item dead code elimination in dependency analysis
+    \item {\it "spaghetti code"} elimination
+    \item simple code inlining
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Results}
+  tabular
+\end{frame}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
