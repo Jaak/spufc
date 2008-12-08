@@ -19,9 +19,9 @@ loop (IsLast k) (App _ e@(App _ _ _) e') = App RegularCall (loop (IsLast k) e) (
 loop (IsLast k) (App _ e e') = App (LastCall k) (loop NotLast e) (loop NotLast e')
 loop ctx (Let (Rec bs) e) = let
     f (x, e') = (x, loop NotLast e')
-  in Let (Rec (map f bs)) (loop NotLast e)
-loop _ (Let (Single x e') e) = Let (Single x (loop NotLast e')) (loop NotLast e)
-loop _ (Let (Tuple xs e') e) = Let (Tuple xs (loop NotLast e')) (loop NotLast e)
+  in Let (Rec (map f bs)) (loop ctx e)
+loop ctx (Let (Single x e') e) = Let (Single x (loop NotLast e')) (loop ctx e)
+loop ctx (Let (Tuple xs e') e) = Let (Tuple xs (loop NotLast e')) (loop ctx e)
 loop _ (Builtin bi es) = Builtin bi (map (loop NotLast) es)
 loop _ (MkTuple es) = MkTuple (map (loop NotLast) es)
 loop _ (Select i e) = Select i (loop NotLast e)
