@@ -1,0 +1,21 @@
+#include prelude.puf
+
+/**
+ * quicksort
+ */
+
+partition x ys = letrec
+    loop ls rs ys = case ys of
+      [] -> (ls, rs);
+      y : ys -> if y < x
+        then loop (y : ls) rs ys
+        else loop ls (y : rs) ys;
+  in loop [] [] ys;
+
+qs xs = case xs of
+  [] -> [];
+  x : xs -> let
+      (ls, rs) = partition x xs;
+    in concat (qs ls) (x : qs rs);
+
+main = last (qs (reverse (fromTo 10 1000)));

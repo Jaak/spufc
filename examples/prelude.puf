@@ -67,3 +67,21 @@ take n xs = if n <= 0
     x : xs -> x : take (n - 1) xs;
 
 from n = n : from (n + 1);
+
+fromTo n m = if n <= m
+  then n : fromTo (n + 1) m
+  else [];
+
+concat xs ys = letrec
+    loop xs = case xs of
+      [] -> ys;
+      x : xs -> x : loop xs;
+  in loop xs;
+
+reverse xs = letrec
+    f acc xs = case xs of
+      [] -> acc;
+      x : xs -> f (x : acc) xs;
+  in f [] xs;
+
+last xs = head (reverse xs);
