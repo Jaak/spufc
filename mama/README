@@ -8,6 +8,35 @@ http://www2.informatik.tu-muenchen.de/lehre/vorlesungen/SS08/vm/
 testing code from:
 http://wwwseidl.in.tum.de/projekte/vam/
 
+requirements
+============
+
+Requires Digital Mars D (dmd) compiler version 2.0 or greater. Alternatively
+GCC implementation of D (gdc-4.6 or greater).
+
+
+OSX
+---
+
+Debian
+------
+
+apt-get install gdc
+
+Gentoo
+------
+
+layman -a sunrise
+# requires unmasking
+emerge dmd
+
+Ubuntu, Fedora, Suse, Windows
+-----------------------------
+
+Download and install package from:
+
+http://www.digitalmars.com/d/download.html
+
 building
 ========
 
@@ -18,10 +47,10 @@ notest      disables unittests
 fast        disables runtime-typecheks (implies notest)
 nostat      disables staistics (implies fast)
 
-Requires a compiler for D version 1 
-See: http://www.digitalmars.com/d/1.0/
+Requires a compiler for D version 2
+See: http://www.digitalmars.com/d/2.0/
 
-Currently supported compilers: gdc, dmd. Tested on os x, linux and vista.
+Currently supported compilers: gdc, dmd.
 
 
 usage
