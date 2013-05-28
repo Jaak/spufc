@@ -1,22 +1,22 @@
-test/add.f.cbn
-10
-test/add.f.cbv
-10
 test/add2.f.cbn
 17
 test/add2.f.cbv
 17
+test/add.f.cbn
+10
+test/add.f.cbv
+10
 test/app.f.cbn
 1 : Closure(37)
 test/app.f.cbv
 1 : 2 : 3 : 4 : 5 : Nil
-test/fac.f.cbn
-24
-test/fac.f.cbv
-24
 test/fac2.f.cbn
 24
 test/fac2.f.cbv
+24
+test/fac.f.cbn
+24
+test/fac.f.cbv
 24
 test/fib.f.cbn
 5
