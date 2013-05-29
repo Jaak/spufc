@@ -5,7 +5,7 @@ import AST (Builtin(..))
 
 }
 
-%wrapper "posn-bytestring"
+%wrapper "posn"
 
 $alpha0 = [a-z A-Z 0-9 \xAA \xBA \xC0-\xD6 \xD8-\xF6 \xF8-\xFF]
 
@@ -23,7 +23,7 @@ tokens :-
   @comment                ;
   
   -- includes
-  \#include $white* (@unialpha | \.)* { \ p x -> Include (drop 9 $ ByteString.unpack x) (tr p) }
+  \#include $white* (@unialpha | \.)* { \ p x -> Include (drop 9 x) (tr p) }
   
   -- if then else
   if                      { \ p x -> JustToken If   (tr p) }
@@ -70,11 +70,11 @@ tokens :-
   in                      { \ p x -> JustToken In        (tr p) }
   
   -- literals and identificators
-  [0-9]+                  { \ p x -> JustToken (Lit $ read $ ByteString.unpack x)  (tr p) }
-  @unialpha @unialpha*    { \ p x -> JustToken (Id  $ ByteString.unpack x)         (tr p) }
+  [0-9]+                  { \ p x -> JustToken (Lit $ read $ x)  (tr p) }
+  @unialpha @unialpha*    { \ p x -> JustToken (Id  $ x)         (tr p) }
   
   -- error case
-  .                       { \ p x -> Error (ByteString.unpack x) (tr p) }
+  .                       { \ p x -> Error x (tr p) }
 {
 
 type Offs = Int

@@ -4,14 +4,14 @@ import Control.Monad.Error
 import qualified PufParser as PP
 import qualified PufTokens as PT
 import qualified AST
-import qualified Data.ByteString.Lazy.Char8 as BS
 
+import System.IO
 import Control.Monad (filterM)
 import System.Directory
 import System.FilePath
 
 rawTokens :: FilePath -> IO [PT.RawToken]
-rawTokens = fmap PT.alexScanTokens . BS.readFile
+rawTokens = fmap PT.alexScanTokens . readFile
 
 report_fail :: (Monad m) => FilePath -> PT.Pos -> String -> m a
 report_fail fp (b,l,c) str = fail (fp ++ ":" ++ show l ++ ":" ++ show c ++ " Lexer:" ++ str)
@@ -41,5 +41,5 @@ expr_tokens = mapM slfs
         slfs (PT.JustToken x p) = return (x,p,fn)
         fn = "<interactive>"
             
-parsePuf  :: BS.ByteString -> Either String (AST.AST String)
+parsePuf  :: String -> Either String (AST.AST String)
 parsePuf code = fmap PP.parseExpr $ expr_tokens $ PT.alexScanTokens code 
