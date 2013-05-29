@@ -131,7 +131,7 @@ void exec_instr(ref instr i, VM vm) in {
     case Instr.Div      : div(vm)               ; version(Stats) ++vm.basic_op ; return;
     case Instr.Leq      : leq(vm)               ; version(Stats) ++vm.basic_op ; return;
     case Instr.Eq       : eq(vm)                ; version(Stats) ++vm.basic_op ; return;
-    case Instr.Apply    : apply(vm)             ; version(Stats) version(Stats) ++vm.other ; return;
+    case Instr.Apply    : apply(vm)             ; version(Stats) ++vm.other ; return;
     case Instr.Update   : update(vm)            ; version(Stats) ++vm.other ; return;
     case Instr.Halt     : halt(vm)              ; version(Stats) ++vm.other ; return;
     case Instr.Neg      : neg(vm)               ; version(Stats) ++vm.basic_op ;return;
@@ -338,11 +338,9 @@ class VM {
 
     // state string
     version(Stats)
-    string stats(){
+    void writeStats(){
       string fs = "Statistics: \njump:    \t%d\njumpzs:   \t%d\nbasic_ops: \t%d\nother:   \t%d\nmax stack size:    \t%d \nheap objects created: \t%d";
-      string str = format(fs,jumps,basic_op,jumpzs,other,max_stack,objects);
-
-      return str;
+      writefln(fs,jumps,basic_op,jumpzs,other,max_stack,objects);
     }
 }
 
@@ -392,7 +390,7 @@ struct Value {
     }
 
     string toString(){
-      return type==Int ? format("",intData) : format("@",addrData);
+      return type==Int ? format("%d",intData) : format("@%s",addrData);
     }
 
     invariant() {
@@ -1006,7 +1004,7 @@ void printUsage(){
     writefln("Usage: mama [options] <file.cbn> ");
     writefln("Options: -v       \t print state and instruction on every step");
     writefln("         -i       \t print instruction for every step");
-    version(NoStats)
+    version(Stats)
     writefln("         -s       \t after execution, print statistics ");
     writefln("         -r       \t only print result (overrides all previous) ");
     writefln("         -?       \t this text ");
@@ -1090,7 +1088,7 @@ int main(string[] args)
   if (result) {
     // print short result
     if (v1.halted)
-      writefln(v1.stack[0].addrData.toString());
+      writefln("%s",v1.stack[0].addrData.toString());
     else
       writefln("<program did not halt in %d steps>",step);
   } else {
@@ -1100,12 +1098,14 @@ int main(string[] args)
     } else {
       writefln("program state after %d steps", step);
     }
-    writefln(v1.toString());
+    writefln("%s",v1.toString());
   }
 
   version(Stats)
   if (stats){
-    writefln("----------\n",v1.stats(),"\n","----------");
+    writefln("--------");
+    v1.writeStats();
+    writefln("--------");
   }
 
   return 0;

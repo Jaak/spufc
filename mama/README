@@ -6,7 +6,7 @@ http://math.ut.ee/~varmo/TM2008/slides/tm-mama.pdf   and
 http://www2.informatik.tu-muenchen.de/lehre/vorlesungen/SS08/vm/
 
 testing code from:
-http://wwwseidl.in.tum.de/projekte/vam/
+http://www2.in.tum.de/vam
 
 requirements
 ============
@@ -15,8 +15,17 @@ Requires Digital Mars D (dmd) compiler version 2.0 or greater. Alternatively
 GCC implementation of D (gdc-4.6 or greater).
 
 
-OSX
----
+OSX (Using MacPorts)
+--------------------
+
+sudo port install dmd druntime phobos
+
+OSX (vanilla)
+--------------------
+
+1) Download a recent dmd compiler (for example http://dlang.org/download/dmd.2.063.dmg)
+2) Run DMD2.pkg inside the .dmg image.
+3) Continue, Continue, Agree, Install, Enter Password, Close.
 
 Debian
 ------
